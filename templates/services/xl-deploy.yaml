@@ -1,0 +1,431 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  This template will launch 2 EC2 instances with XL Deploy
+Parameters:
+  InstanceType:
+    Description: XL Deploy EC2 instance type
+    Type: String
+    Default: t2.medium
+    AllowedValues: [ t2.medium, t2.large, t2.xlarge, t2.2xlarge,
+                     m5.large, m5.xlarge, m5.4xlarge, m5.12xlarge,
+                     c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.18xlarge,
+                     r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.12xlarge, r5.24xlarge ]
+    ConstraintDescription: must be a valid EC2 instance type.
+  ASGInstanceName:
+    Description: ASG instances name
+    Type: String
+    Default: xl-deploy-asg
+  OperatorEMail:
+    Description: EMail address to notify if there are any scaling operations
+    Type: String
+    AllowedPattern: ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
+    ConstraintDescription: must be a valid email address.
+  KeyPairName:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  PrivateSubnetIDs:
+    Description: The private subnet XL should be deployed to
+    Type: List<AWS::EC2::Subnet::Id>
+  XLDeployAdminPassword:
+    Description: The admin password of XL Deploy
+    MinLength: 8
+    Type: String
+    NoEcho: True
+  XLDeployPort:
+    Description: The port to run XL Deploy on
+    AllowedPattern: ^[1-9][0-9]{3,4}$
+    Type: String
+    Default: '4516'
+  TargetGroupARN:
+    Description: ALB TargetGroup ARN for XL Deploy
+    Type: String
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup::Id'
+    Description: The Security Group that grants access
+  DBHost:
+    Description: The Postgres DB Host/Endpoint
+    Type: String
+  DBPort:
+    Description: The Postgres DB Port
+    Type: String
+    Default: 5432
+  DBUser:
+    Description: The Postgres DB username
+    Type: String
+  DBPassword:
+    Description: The Postgres DB Password
+    Type: String
+    NoEcho: True
+  DBDriver:
+    Description: The database driver to use
+    Type: String
+    Default: 'org.postgresql.Driver'
+    AllowedValues: [ 'org.postgresql.Driver', 'com.microsoft.sqlserver.jdbc.SQLServerDriver', 'com.mysql.cj.jdbc.Driver' ]
+  EfsId:
+    Description: The ID of the EFS filesystem within the selected VPC
+    Type: String
+    AllowedPattern: ^fs\-\w{8,}$
+    ConstraintDescription: Must be a valid EFS identifier
+  LogGroup:
+    Description: The CloudWatch log group to push XL Deploy logs to
+    Type: String
+    Default: '/aws/ec2/xld'
+#  SslCertificateArn:
+#    Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs  instances
+#    Type: String
+#    Default: ':default'
+
+Mappings:
+  AWSRegionAMI:
+    eu-west-1:
+      AMIID: ami-0e54abdfe1e08cc3c
+    eu-west-2:
+      AMIID: ami-07f0a686a89aae59b
+    us-east-1:
+      AMIID: ami-08074489a82d1fc7a
+    us-west-1:
+      AMIID: ami-0b76fea147fef2e00
+  DBType:
+    'org.postgresql.Driver':
+      Name: 'postgresql'
+    'com.microsoft.sqlserver.jdbc.SQLServerDriver':
+      Name: 'sqlserver'
+    'com.mysql.cj.jdbc.Driver':
+      Name: 'mysql'
+
+#Conditions:
+#  SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
+
+Resources:
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref 'OperatorEMail'
+          Protocol: email
+  XLDeployGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier: !Ref 'PrivateSubnetIDs'
+      LaunchConfigurationName: !Ref 'LaunchConfig'
+      Tags:
+        - Key: Name
+          PropagateAtLaunch: true
+          Value:
+            Ref: ASGInstanceName
+      MinSize: '2'
+      MaxSize: '2'
+      TargetGroupARNs:
+        - !Ref TargetGroupARN
+      NotificationConfigurations:
+        - TopicARN: !Ref 'NotificationTopic'
+          NotificationTypes: ['autoscaling:EC2_INSTANCE_LAUNCH', 'autoscaling:EC2_INSTANCE_LAUNCH_ERROR',
+                              'autoscaling:EC2_INSTANCE_TERMINATE', 'autoscaling:EC2_INSTANCE_TERMINATE_ERROR']
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 2
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        PauseTime: PT10M
+        WaitOnResourceSignals: true
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      AWS::CloudFormation::Init:
+        setup:
+          files:
+            '/opt/xld/conf/deployit.conf':
+              content: |
+                admin.password={{XLDeployAdminPassword}}
+                jcr.repository.path=repository
+                threads.min=3
+                maintenance.forbidden_paths=deployit/task\:POST,deployit/tasks/v2\:POST,deployit/control\:POST
+                client.server_poll.delay=30000
+                ssl=false
+                http.bind.address=0.0.0.0
+                http.context.root=/
+                threads.max=24
+                ssl.mutual=false
+                http.upload.buffer=262144
+                http.port={{XLDeployPort}}
+                client.automatically.map.all.deployables.on.initial=true
+                client.automatically.map.all.deployables.on.update=true
+                client.automatically.map.all.deployables=true
+                client.session.timeout.minutes=144
+                client.session.remember.enabled=true
+                server.resolve.application.dependencies=true
+                server.mapping.override.deployed.fields.on.update=true
+                hide.internals=false
+                importable.packages.path=importablePackages
+              owner: xl
+              group: xl
+              context:
+                XLDeployAdminPassword: !Ref 'XLDeployAdminPassword'
+                XLDeployPort: !Ref 'XLDeployPort'
+            '/opt/xld/conf/xl-deploy.conf':
+              content: |
+                xl {
+                  metrics {
+                    enabled = false
+                  }
+
+                  cluster {
+                    # mode: "default", "hot-standby", "full"
+                    mode = hot-standby
+                    name = "xl-deploy_cluster"
+
+                    node {
+                        clusterPort=2552
+                        hostname="HOSTNAME"
+                        id="HOSTNAME"
+                    }
+
+                    membership {
+                      jdbc {
+                        url="jdbc:{{ DBType }}://{{ DBHost }}:{{ DBPort }}/xldeploy"
+                        username="{{ DBUser }}"
+                        password="{{ DBPassword }}"
+                      }
+                    }
+                    akka {
+                      loglevel = "INFO"
+                      actor.debug.receive = off
+                      remote {
+                        log-received-messages = off
+                        log-sent-messages = off
+                      }
+                    }
+                  }
+
+                  repository {
+                    artifacts {
+                      type = "db"
+                    }
+                    database {
+                      db-driver-classname="{{ DBDriver }}"
+                      db-username="{{ DBUser }}"
+                      db-password="{{ DBPassword }}"
+                      db-url="jdbc:{{ DBType }}://{{ DBHost }}:{{ DBPort }}/xldeploy"
+                      max-pool-size=10
+                    }
+                  }
+
+                  reporting {
+                    database {
+                      db-driver-classname = "{{ DBDriver }}"
+                      db-username = "{{ DBUser }}"
+                      db-password = "{{ DBPassword }}"
+                      db-url = "jdbc:{{ DBType }}://{{ DBHost }}:{{ DBPort }}/xldeploy"
+                      max-pool-size=10
+                    }
+                  }
+
+                }
+              context:
+                DBUser: !Ref 'DBUser'
+                DBPassword: !Ref 'DBPassword'
+                DBHost: !Ref 'DBHost'
+                DBPort: !Ref 'DBPort'
+                DBDriver: !Ref 'DBDriver'
+                DBType: !FindInMap [DBType, !Ref 'DBDriver', Name]
+              owner: xl
+              group: xl
+            '/opt/xld/conf/logback.xml':
+              content: |
+                <configuration>
+                  <!-- removing this listener may cause performance issues-->
+                  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+                      <resetJUL>true</resetJUL>
+                  </contextListener>
+
+                  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                      <encoder>
+                          <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] {%mdc} %-5level %logger{36} - %msg%n</pattern>
+                      </encoder>
+                  </appender>
+
+                  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                      <file>log/${LOGFILE:-deployit}.log</file>
+                      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                          <fileNamePattern>log/${LOGFILE:-deployit}.%i.log</fileNamePattern>
+                          <minIndex>1</minIndex>
+                          <maxIndex>5</maxIndex>
+                      </rollingPolicy>
+                      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                          <maxFileSize>5MB</maxFileSize>
+                      </triggeringPolicy>
+                      <encoder>
+                          <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] {%mdc} %-5level %logger{36} - %msg%n</pattern>
+                      </encoder>
+                  </appender>
+
+                  <appender name="CLOUDWATCH" class="io.github.dibog.AwsLogAppender">
+                      <createLogGroup>true</createLogGroup>
+                      <queueLength>100</queueLength>
+                      <groupName>{{LogGroup}}</groupName>
+                      <streamName>XLDeploy-${HOSTNAME:-default}</streamName>
+                      <layout>
+                          <pattern>[%X{a} %X{b}] %-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+                      </layout>
+                  </appender>
+
+                  <root level="info">
+                      <appender-ref ref="STDOUT" />
+                      <appender-ref ref="FILE" />
+                      <appender-ref ref="CLOUDWATCH" />
+                  </root>
+
+                  <logger name="com.xebialabs" level="info" />
+                  <logger name="com.xebialabs.deployit.core.api.resteasy.http" level="info" />
+                  <logger name="com.xebialabs.deployit.jetty.HttpHeaderOverrideServletRequest" level="info" />
+                  <logger name="com.xebialabs.deployit.jetty.FlexRestCompatibilityServletRequest" level="info" />
+                  <logger name="com.xebialabs.deployit.migration" level="info" />
+                  <logger name="com.xebialabs.overthere" level="info" />
+                  <logger name="net.schmizz.sshj" level="error" />
+                  <logger name="org.springframework" level="warn"/>
+                  <logger name="org.apache.commons.httpclient" level="warn" />
+                  <logger name="org.apache.jackrabbit.core.value.BLOBInDataStore" level="error" />
+                  <logger name="org.eclipse.aether" level="info" />
+                  <logger name="de.schlichtherle.truezip" level="warn" />
+                  <logger name="com.google.inject.internal.util" level="error"/>
+                  <logger name="org.springframework.beans.factory.support.DefaultListableBeanFactory" level="error"/>
+                  <logger name="liquibase" level="warn"/>
+                  <logger name="org.springframework.web.socket.adapter.jetty.JettyWebSocketHandlerAdapter" level="off"/>
+
+                  <!--  Audit logging -->
+
+                  <appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                      <file>log/audit.log</file>
+                      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                          <FileNamePattern>log/audit.%d{yyyy-MM-dd}.log</FileNamePattern>
+                      </rollingPolicy>
+                      <encoder>
+                          <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%logger{36}] %msg%n</pattern>
+                      </encoder>
+                  </appender>
+                  <logger name="audit" level="info" additivity="false">
+                      <appender-ref ref="AUDIT" />
+                  </logger>
+                </configuration>
+              owner: xl
+              group: xl
+              context:
+                LogGroup: !Ref LogGroup
+          commands: 
+            00_remove_xlr:
+              command: rm -Rf /opt/xlr /etc/systemd/system/xlr.service
+            01_configure_wrapper_memory:
+              command: export MEMORY=`free -m | head -n 2 | tail -n 1 | awk '{print $7}'`; sed -i "s/\[\[ MEM_SIZE \]\]/$MEMORY/" /opt/xld/conf/xld-wrapper-linux.conf
+            02_configure_efs_mount:
+              command: |
+                mkdir -p $EFS_MOUNT_POINT
+                echo "$EFS_ID:/ $EFS_MOUNT_POINT efs tls,_netdev" >> /etc/fstab
+                mount -a -t efs defaults
+
+                chown -R xl:xl $EFS_MOUNT_POINT
+              env:
+                EFS_ID: !Ref EfsId
+                EFS_MOUNT_POINT: /opt/xld/work
+            03_get_ip_for_cluster:
+              command: export IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4); sed -i "s/HOSTNAME/$IP/g" /opt/xld/conf/xl-deploy.conf
+          services:
+            sysvinit:
+              xld:
+                enabled: true
+                ensureRunning: true
+                files:
+                  - '/opt/xld/conf/xld-wrapper-linux.conf'
+                  - '/opt/xld/conf/xl-deploy.conf'
+                  - '/opt/xld/conf/deployit.conf'
+                  - '/opd/xld/conf/logback.xml'
+        health_checks:
+          commands:
+            01_await_healthy_service:
+              command: |
+                i=0
+                EXIT_CODE=1
+                # Let's retry for three minutes (18 times, every 10 seconds)
+                while [ $i -lt 18 ]
+                do
+                  echo "Checking for healthy service (currently on attempt $i)..."
+                  RESULT=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$APPLICATION_PORT/")
+
+                  if [[ "$RESULT" -lt 500 && "$RESULT" -ge 200 ]]; then
+                    echo "Status code is $RESULT - will signal success to stack"
+                    EXIT_CODE=0
+                    break
+                  else
+                    ((i++))
+                    echo "Current status code: $RESULT - retrying..."
+                    sleep 10
+                  fi
+                done
+
+                if [[ "$EXIT_CODE" -eq 1 ]]; then
+                  echo "Startup failed - signalling failure to stack"
+                fi
+
+                /opt/aws/bin/cfn-signal --exit-code $EXIT_CODE --stack $STACK_NAME --resource XLDeployGroup --region $REGION
+              env:
+                APPLICATION_PORT: !Ref 'XLDeployPort'
+                STACK_NAME: !Sub ${AWS::StackName}
+                REGION: !Sub ${AWS::Region}
+        jmxtrans:
+          commands:
+            01_create_jmxtrans_pid_folder:
+              command: sudo mkdir /var/run/jmxtrans && sudo chown jmxtrans:jmxtrans /var/run/jmxtrans
+            02_start_jmxtrans:
+              command: sudo /usr/share/jmxtrans/bin/jmxtrans start
+        configSets:
+          configuration:
+            - 'setup'
+            - 'health_checks'
+            - 'jmxtrans'
+    Properties:
+      KeyName: !Ref 'KeyPairName'
+      ImageId: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
+      SecurityGroups: [!Ref 'SecurityGroup']
+      InstanceType: !Ref 'InstanceType'
+      IamInstanceProfile: !Ref 'XLDInstanceProfile'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          yum update -y aws-cfn-bootstrap
+
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region} --configsets configuration
+  CloudwatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: 'xld-cloudwatch-logging'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: "logs:*"
+                Resource: "arn:aws:logs:*:*:*"
+              - Effect: Allow
+                Action: "cloudwatch:*"
+                Resource: "*"
+  XLDInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref "CloudwatchRole"
+
+# Outputs:

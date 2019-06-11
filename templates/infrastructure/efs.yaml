@@ -1,0 +1,70 @@
+Description: >
+  This template deploys an EFS file system that can be used from ASGs services for persistent data.
+
+Parameters:
+  EnvironmentName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Description: An environment name that will be prefixed to resource names.
+    Type: String
+  EFSNameTag:
+    MinLength: 1
+    Description: The name of the EFS volume.
+    Type: String
+    Default: xebialabs-EFSvolume
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC EFS should be deployed to
+  XLDeployASGSecurityGroup:
+    Description: The security group to attach to the XL Deploy ASG instances
+    Type: AWS::EC2::SecurityGroup::Id
+  XLReleaseASGSecurityGroup:
+    Description: The security group to attach to the XL Release ASG instances
+    Type: AWS::EC2::SecurityGroup::Id    
+  PrivateSubnetIDs:
+    Description: The private subnets this EFS can be mount
+    Type: List<AWS::EC2::Subnet::Id>
+
+Resources:
+
+  MountTargetSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCID
+      GroupDescription: Security group for mount target
+      SecurityGroupIngress:
+      - SourceSecurityGroupId: !Ref XLDeployASGSecurityGroup
+        IpProtocol: '-1'
+      - SourceSecurityGroupId: !Ref XLReleaseASGSecurityGroup
+        IpProtocol: '-1'
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnvironmentName}-EFS-Hosts
+  FileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      FileSystemTags:
+      - Key: Name
+        Value:
+          Ref: EFSNameTag
+  MountTarget:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SubnetId: !Select [ 0, !Ref PrivateSubnetIDs ]
+      SecurityGroups:
+      - Ref: MountTargetSecurityGroup
+  MountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SubnetId: !Select [ 1, !Ref PrivateSubnetIDs ]
+      SecurityGroups:
+      - Ref: MountTargetSecurityGroup
+
+Outputs:
+  Filesystem:
+    Description: A reference to the EFS FileSystem
+    Value: !Ref FileSystem
+

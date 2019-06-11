@@ -1,0 +1,23 @@
+[
+    {
+        "ParameterValue": "10.0.0.0/19",
+        "ParameterKey": "CIDRBlockVpc"
+    }, 
+    {
+        "ParameterValue": "0.0.0.0/0",
+        "ParameterKey": "YourHomeIPRange"
+    }, 
+    {
+        "ParameterValue": "xl-aws-ami@xebialabs.com",
+        "ParameterKey": "OperatorEMail"
+    },
+    {
+        "ParameterValue": "override",
+        "ParameterKey": "KeyPairName"
+    },
+
+    {
+        "ParameterValue": "$[taskcat_autobucket]",
+        "ParameterKey": "QSS3BucketName"
+    }
+]
