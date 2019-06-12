@@ -1,12 +1,14 @@
 global:
   owner: xl-aws-ami@xebialabs.com
   qsname: ami-xebialabs-devops-platform
+
+  # N.B.: If you run the tests in a different region than us-east-1,
+  # add an override for CertificateArn in ~/.aws/taskcat_global_override.json
   regions:
-    #- us-west-1
-    #- eu-west-1
-     - us-east-1
+    - eu-west-2
+
   reporting: true
 tests:
-  existing-vpc-e2e:
+  new-vpc-e2e:
     parameter_input: new-vpc-e2e.json
     template_file: install-xl-platform.yaml

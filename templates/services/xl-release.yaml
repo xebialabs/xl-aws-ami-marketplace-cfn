@@ -3,7 +3,7 @@ Description: |
   This template will launch 2 EC2 instances with XL Release
 Parameters:
   InstanceType:
-    Description: XL Deploy EC2 instance type
+    Description: XL Release EC2 instance type
     Type: String
     Default: t2.medium
     AllowedValues: [ t2.medium, t2.large, t2.xlarge, t2.2xlarge,
@@ -175,7 +175,7 @@ Resources:
                 http.bind.address=0.0.0.0
                 jcr.repository.path=repository
                 client.automatically.map.all.deployables.on.initial=false
-                http.context.root=/
+                http.context.root=/release
                 importable.packages.path=importablePackages
                 server.mapping.override.deployed.fields.on.update=true
               owner: xl

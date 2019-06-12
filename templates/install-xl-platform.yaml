@@ -5,7 +5,10 @@ Description: >
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
-
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - CertificateArn
       - Label:
           default: XebiaLabs DevOps Platform Configuration
         Parameters:
@@ -38,6 +41,9 @@ Metadata:
       QSS3KeyPrefix:
         default: Quick Start S3 key prefix
 Parameters:
+  CertificateArn:
+    Description: Which ACM certificate to use for the load balancer
+    Type: String
   OperatorEMail:
     Description: EMail address to notify if there are any scaling operations
     Type: String
@@ -180,6 +186,7 @@ Resources:
         - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         OperatorEMail: !Ref OperatorEMail
+        CertificateArn: !Ref CertificateArn
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         PublicSubnetIDs: !GetAtt VPCStack.Outputs.PublicSubnetIDs
         PrivateSubnetIDs: !GetAtt VPCStack.Outputs.PrivateSubnetIDs
