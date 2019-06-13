@@ -14,7 +14,7 @@ Parameters:
   ASGInstanceName:
     Description: ASG instances name
     Type: String
-    Default: xl-release-asg
+    Default: xl-release-asg-marketplace
   OperatorEMail:
     Description: EMail address to notify if there are any scaling operations
     Type: String
@@ -86,17 +86,11 @@ Parameters:
     Description: The CloudWatch log group for XL Release
     Type: String
     Default: /aws/ec2/xlr
+  AMIID:
+    Description: The AMI ID used to for XL DevoPS Platform
+    Type: AWS::EC2::Image::Id
 
 Mappings:
-  AWSRegionAMI:
-    eu-west-1:
-      AMIID: ami-0e54abdfe1e08cc3c
-    eu-west-2:
-      AMIID: ami-07f0a686a89aae59b
-    us-east-1:
-      AMIID: ami-08074489a82d1fc7a
-    us-west-1:
-      AMIID: ami-0b76fea147fef2e00
   DBType:
     'org.postgresql.Driver':
       Name: 'postgresql'
@@ -409,7 +403,7 @@ Resources:
             - 'jmxtrans'
     Properties:
       KeyName: !Ref 'KeyPairName'
-      ImageId: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
+      ImageId: !Ref 'AMIID'
       SecurityGroups: [!Ref 'SecurityGroup']
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'XLRInstanceProfile'

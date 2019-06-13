@@ -151,8 +151,27 @@ Parameters:
     Description: 'The Environment name, defaults to ''xebialabs-aws''.'
     Type: String
     Default: xebialabs-aws
-#Conditions:
-#  SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
+
+Mappings:
+  AWSRegionAMI:
+    eu-central-1:
+      AMIID: ami-09b3778dd37bc1f37
+    eu-north-1:
+      AMIID: ami-020490bb2799fb252
+    eu-west-1:
+      AMIID: ami-0889c7c065b4c45c5
+    eu-west-2:
+      AMIID: ami-0e5b23d50a47f9588
+    eu-west-3:
+      AMIID: ami-0dda0ae48212a0695
+    us-east-1:
+      AMIID: ami-0b96783b67b839247
+    us-east-2:
+      AMIID: ami-02157a78ca4ed0991
+    us-west-1:
+      AMIID: ami-047ca4cc88ddfa06e
+    us-west-2:
+      AMIID: ami-0b0548c807ce52290
 Conditions:
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
 Resources:
@@ -222,7 +241,9 @@ Resources:
        DBPort: !Ref DBPort
        DBUser: !Ref DBUsername
        DBPassword: !Ref DBPassword
+       AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
        EfsId: !GetAtt EFSStack.Outputs.Filesystem
+
   XLReleaseStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -245,6 +266,7 @@ Resources:
         ReportingDBPort: !Ref DBPort
         ReportingDBUser: !Ref DBUsername
         ReportingDBPassword: !Ref DBPassword
+        AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable
