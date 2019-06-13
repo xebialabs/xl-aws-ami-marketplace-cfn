@@ -242,6 +242,6 @@ Outputs:
   XLReleaseURL:
     Description: The URL where XL Release is reachable
     Value: !GetAtt XLDevOpsPlatformStack.Outputs.XLReleaseURL
-  EIP1:
+  BastionPublicIP:
     Description: Elastic IP from where the Bastion can be reached
     Value: !GetAtt BastionStack.Outputs.EIP1
