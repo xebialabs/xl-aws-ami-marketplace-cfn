@@ -20,26 +20,6 @@
         "ParameterKey": "DBMasterPassword"
     },
     {
-        "ParameterValue": "$[taskcat_genpass_8A]",
-        "ParameterKey": "XLDeployPassword"
-    },
-    {
-        "ParameterValue": "$[taskcat_genpass_8A]",
-        "ParameterKey": "XLDeployPassword"
-    },
-    {
-        "ParameterValue": "$[taskcat_genpass_8A]",
-        "ParameterKey": "XLDeployPassword"
-    },
-    {
-        "ParameterValue": "$[taskcat_genpass_8A]",
-        "ParameterKey": "XLDeployPassword"
-    },
-    {
-        "ParameterValue": "$[taskcat_genpass_8A]",
-        "ParameterKey": "XLDeployPassword"
-    },
-    {
         "ParameterValue": "override",
         "ParameterKey": "KeyPairName"
     },
