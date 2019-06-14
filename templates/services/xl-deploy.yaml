@@ -147,7 +147,7 @@ Resources:
                 client.server_poll.delay=30000
                 ssl=false
                 http.bind.address=0.0.0.0
-                http.context.root=/
+                http.context.root=/deploy
                 threads.max=24
                 ssl.mutual=false
                 http.upload.buffer=262144

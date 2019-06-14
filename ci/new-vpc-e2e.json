@@ -15,9 +15,12 @@
         "ParameterValue": "override",
         "ParameterKey": "KeyPairName"
     },
-
     {
         "ParameterValue": "$[taskcat_autobucket]",
         "ParameterKey": "QSS3BucketName"
+    },
+    {
+        "ParameterValue": "arn:aws:acm:us-east-1:932770550094:certificate/7b814bab-2f10-4940-9cad-ee8f38422a0c",
+        "ParameterKey": "CertificateArn"
     }
 ]
