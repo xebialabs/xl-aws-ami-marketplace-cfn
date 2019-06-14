@@ -5,7 +5,10 @@ Description: >
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
-
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - CertificateArn
       - Label:
           default: XebiaLabs DevOps Platform Configuration
         Parameters:
@@ -38,6 +41,9 @@ Metadata:
       BucketKeyPrefix:
         default: Quick Start S3 key prefix
 Parameters:
+  CertificateArn:
+    Description: Which ACM certificate to use for the load balancer
+    Type: String
   XLPlatformInstanceType:
     AllowedValues:
       - t2.medium
@@ -204,6 +210,7 @@ Resources:
         - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/install-xl-platform-existing-vpc.yaml
         - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
+        CertificateArn: !Ref CertificateArn
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         PublicSubnetIDs: !GetAtt VPCStack.Outputs.PublicSubnetIDs
         PrivateSubnetIDs: !GetAtt VPCStack.Outputs.PrivateSubnetIDs

@@ -26,12 +26,12 @@ Resources:
       GroupDescription: Access to the load balancer that sits in front of ASGs
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 4516
-          ToPort: 4516
+          FromPort: 80
+          ToPort: 80
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 5516
-          ToPort: 5516
+          FromPort: 443
+          ToPort: 443
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name

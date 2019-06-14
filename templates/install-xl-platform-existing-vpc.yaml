@@ -11,6 +11,7 @@ Metadata:
           - VPCID
           - PrivateSubnetIDs
           - PublicSubnetIDs
+          - CertificateArn
       - Label:
           default: XebiaLabs DevOps Platform Configuration
         Parameters:
@@ -64,6 +65,9 @@ Metadata:
       BucketKeyPrefix:
         default: Quick Start S3 key prefix
 Parameters:
+  CertificateArn:
+    Description: Which ACM certificate to use for the load balancer
+    Type: String
   VPCID:
     Description: ID of the VPC (e.g., vpc-0343606e)
     Type: AWS::EC2::VPC::Id
@@ -217,6 +221,7 @@ Resources:
         VPCID: !Ref VPCID
         PublicSubnetIDs: !Join [ ",", !Ref PublicSubnetIDs ]
         SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
+        CertificateArn: !Ref CertificateArn
   XLDeployStack:
    Type: 'AWS::CloudFormation::Stack'
    Properties:
@@ -236,7 +241,6 @@ Resources:
        DBPassword: !Ref DBPassword
        AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
        EfsId: !GetAtt EFSStack.Outputs.Filesystem
-
   XLReleaseStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
