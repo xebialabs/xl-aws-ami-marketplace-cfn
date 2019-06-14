@@ -71,7 +71,7 @@ Resources:
           RedirectConfig:
             Protocol: "HTTPS"
             Host: "#{host}"
-            Port: 443
+            Port: "443"
             Path: "/#{path}"
             Query: "#{query}"
             StatusCode: HTTP_301
@@ -195,6 +195,7 @@ Resources:
         - Key: stickiness.lb_cookie.duration_seconds
           Value: '86400'
   applicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name:
         Ref: LoadBalancerName
@@ -203,7 +204,6 @@ Resources:
         Ref: SecurityGroup
       Subnets:
         Ref: PublicSubnetIDs
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
 Outputs:
   LoadBalancerUrlXLD:
     Description: URL for XL Deploy
