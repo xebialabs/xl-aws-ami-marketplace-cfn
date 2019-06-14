@@ -176,20 +176,10 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Metadata:
       AWS::CloudFormation::Init:
+        config:
           commands:
             b-bootstrap:
-              command:
-                Fn::Join:
-                  - ''
-                  - - "./opt/bastion/bastion_bootstrap.sh"
-                    - " --banner "
-                    - "https://aws-quickstart.s3.amazonaws.com/quickstart-linux-bastion/scripts/banner_message.txt"
-                    - " --enable "
-                    - "false"
-                    - " --tcp-forwarding "
-                    - "false"
-                    - " --x11-forwarding "
-                    - "false"
+              command: "/opt/bastion/bastion_bootstrap.sh --banner https://aws-quickstart.s3.amazonaws.com/quickstart-linux-bastion/scripts/banner_message.txt --enable false --tcp-forwarding false --x11-forwarding false"
     Properties:
       AssociatePublicIpAddress: true
       PlacementTenancy:
