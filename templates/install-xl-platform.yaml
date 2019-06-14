@@ -30,11 +30,11 @@ Metadata:
         Parameters:
           - BucketName
           - BucketKeyPrefix
-    - Label:
-        default: General Settings
-      Parameters:
-        - EnvironmentName
-        - KeyPairName
+      - Label:
+          default: General Settings
+        Parameters:
+          - EnvironmentName
+          - KeyPairName
     ParameterLabels:
       CIDRBlockVpc:
         default: cidr block
