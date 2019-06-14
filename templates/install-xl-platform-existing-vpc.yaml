@@ -16,7 +16,6 @@ Metadata:
           default: XebiaLabs DevOps Platform Configuration
         Parameters:
           - XLPlatformInstanceType
-          - KeyPairName
           - XLDeployPassword
           - XLReleasePassword
       - Label:
@@ -31,7 +30,19 @@ Metadata:
           default: Bastion Host Configuration
         Parameters:
           - BastionSecurityGroupID
+      - Label:
+          default: S3 Configuration
+        Parameters:
+          - BucketName
+          - BucketKeyPrefix
+      - Label:
+          default: General Settings
+        Parameters:
+          - EnvironmentName
+          - KeyPairName
     ParameterLabels:
+      CertificateArn:
+        default: Which ACM certificate to use for the load balancer
       VPCID:
         default: VPC ID
       PublicSubnetIDs:
@@ -61,9 +72,9 @@ Metadata:
       EnvironmentName:
         default: Environment name
       BucketName:
-        default: Quick Start S3 bucket name
+        default:  S3 bucket name
       BucketKeyPrefix:
-        default: Quick Start S3 key prefix
+        default: S3 key prefix
 Parameters:
   CertificateArn:
     Description: Which ACM certificate to use for the load balancer
@@ -119,22 +130,22 @@ Parameters:
   BucketName:
     AllowedPattern: '^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$'
     ConstraintDescription: >-
-      Quick Start bucket name can include numbers, lowercase letters, uppercase
+      Bucket name can include numbers, lowercase letters, uppercase
       letters, and hyphens (-). It cannot start or end with a hyphen (-).
     Default: aws-quickstart
     Description: >-
-      S3 bucket name for the Quick Start assets. Quick Start bucket name can
+      S3 bucket name for CFN . Bucket name can
       include numbers, lowercase letters, uppercase letters, and hyphens (-). It
       cannot start or end with a hyphen (-).
     Type: String
   BucketKeyPrefix:
     AllowedPattern: '^[0-9a-zA-Z-/]*$'
     ConstraintDescription: >-
-      Quick Start key prefix can include numbers, lowercase letters, uppercase
+      S3 bucket key prefix can include numbers, lowercase letters, uppercase
       letters, hyphens (-), and forward slash (/).
     Default: ami-xebialabs-devops-platform/
     Description: >-
-      S3 key prefix for the Quick Start assets. Quick Start key prefix can
+      S3 bucket key prefix for CFN. Quick Start key prefix can
       include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/).
     Type: String
