@@ -59,17 +59,11 @@ Metadata:
         default: Bastion Host security group ID
       EnvironmentName:
         default: Environment name
-      QSS3BucketName:
+      BucketName:
         default: Quick Start S3 bucket name
-      QSS3KeyPrefix:
+      BucketKeyPrefix:
         default: Quick Start S3 key prefix
 Parameters:
-  OperatorEMail:
-    Description: EMail address to notify if there are any scaling operations
-    Type: String
-    Default: operator@company.com
-    AllowedPattern: ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
-    ConstraintDescription: must be a valid email address.
   VPCID:
     Description: ID of the VPC (e.g., vpc-0343606e)
     Type: AWS::EC2::VPC::Id
@@ -118,7 +112,7 @@ Parameters:
     Type: String
     NoEcho: True
     Default: Welcome2XebiaLabs
-  QSS3BucketName:
+  BucketName:
     AllowedPattern: '^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$'
     ConstraintDescription: >-
       Quick Start bucket name can include numbers, lowercase letters, uppercase
@@ -129,7 +123,7 @@ Parameters:
       include numbers, lowercase letters, uppercase letters, and hyphens (-). It
       cannot start or end with a hyphen (-).
     Type: String
-  QSS3KeyPrefix:
+  BucketKeyPrefix:
     AllowedPattern: '^[0-9a-zA-Z-/]*$'
     ConstraintDescription: >-
       Quick Start key prefix can include numbers, lowercase letters, uppercase
@@ -179,8 +173,8 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/securitygroups.yaml
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/securitygroups.yaml
+      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
@@ -190,22 +184,22 @@ Resources:
    Type: AWS::CloudFormation::Stack
    Properties:
      TemplateURL: !Sub
-     - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds-lambda.yaml
-     - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+     - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/rds-lambda.yaml
+     - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
      Parameters:
        PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
        DBUser: !Ref DBUsername
        DBPassword: !Ref DBPassword
        DBHost: !Ref DBHost
        AuroraRDSSecurityGroupID: !Ref RDSSecurityGroupID
-       QSS3BucketName: !Ref QSS3BucketName
-       QSS3KeyPrefix: !Ref QSS3KeyPrefix
+       BucketName: !Ref BucketName
+       BucketKeyPrefix: !Ref BucketKeyPrefix
   EFSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/efs.yaml
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/efs.yaml
+      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
@@ -216,8 +210,8 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/alb.yaml
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/alb.yaml
+      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         LoadBalancerName: !Ref EnvironmentName
         VPCID: !Ref VPCID
@@ -227,10 +221,9 @@ Resources:
    Type: 'AWS::CloudFormation::Stack'
    Properties:
      TemplateURL: !Sub
-     - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-deploy.yaml
-     - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+     - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/services/xl-deploy.yaml
+     - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
      Parameters:
-       OperatorEMail: !Ref OperatorEMail
        PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
        InstanceType: !Ref XLPlatformInstanceType
        KeyPairName: !Ref KeyPairName
@@ -248,10 +241,9 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-release.yaml
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/services/xl-release.yaml
+      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        OperatorEMail: !Ref OperatorEMail
         PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
         InstanceType: !Ref XLPlatformInstanceType
         KeyPairName: !Ref KeyPairName

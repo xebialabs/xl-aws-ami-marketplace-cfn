@@ -33,17 +33,11 @@ Metadata:
         default: Database administrator password
       EnvironmentName:
         default: Environment name
-      QSS3BucketName:
+      BucketName:
         default: Quick Start S3 bucket name
-      QSS3KeyPrefix:
+      BucketKeyPrefix:
         default: Quick Start S3 key prefix
 Parameters:
-  OperatorEMail:
-    Description: EMail address to notify if there are any scaling operations
-    Type: String
-    Default: operator@company.com
-    AllowedPattern: ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
-    ConstraintDescription: must be a valid email address.
   XLPlatformInstanceType:
     AllowedValues:
       - t2.medium
@@ -57,14 +51,12 @@ Parameters:
     MinLength: 8
     Type: String
     NoEcho: True
-    Default: Welcome2XebiaLabs
   XLReleasePassword:
     Description: The admin password of XL Release
     MinLength: 8
     Type: String
     NoEcho: True
-    Default: Welcome2XebiaLabs
-  QSS3BucketName:
+  BucketName:
     AllowedPattern: '^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$'
     ConstraintDescription: >-
       Quick Start bucket name can include numbers, lowercase letters, uppercase
@@ -75,7 +67,7 @@ Parameters:
       include numbers, lowercase letters, uppercase letters, and hyphens (-). It
       cannot start or end with a hyphen (-).
     Type: String
-  QSS3KeyPrefix:
+  BucketKeyPrefix:
     AllowedPattern: '^[0-9a-zA-Z-/]*$'
     ConstraintDescription: >-
       Quick Start key prefix can include numbers, lowercase letters, uppercase
@@ -99,11 +91,6 @@ Parameters:
     Type: String
     Description: "Enter a valid /19 cidr block."
     AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/19'
-  YourHomeIPRange:
-    Default: "0.0.0.0/0"
-    Type: String
-    Description: "Enter a valid cidr block to allow traffic to SSH."
-    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
   DBMasterUsername:
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
@@ -120,7 +107,6 @@ Parameters:
     MinLength: '8'
     NoEcho: True
     Type: String
-    Default: 'Welcome2XebiaLabs'
   DBInstanceClass:
     AllowedValues:
       - db.r4.16xlarge
@@ -179,17 +165,17 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/vpc.yaml
-        - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+        - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/vpc.yaml
+        - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         CIDRBlockVpc: !Ref CIDRBlockVpc
-        YourHomeIPRange: !Ref YourHomeIPRange
+        RemoteAccessCIDR: !Ref RemoteAccessCIDR
   BastionStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/bastion.yaml
-        - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+        - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/bastion.yaml
+        - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         PublicSubnetIDs: !GetAtt VPCStack.Outputs.PublicSubnetIDs
@@ -200,8 +186,8 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds.yaml
-        - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+        - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/rds.yaml
+        - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         DataSubnetIDs: !GetAtt VPCStack.Outputs.DataSubnetIDs
@@ -215,10 +201,9 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/install-xl-platform-existing-vpc.yaml
-        - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+        - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/install-xl-platform-existing-vpc.yaml
+        - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        OperatorEMail: !Ref OperatorEMail
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         PublicSubnetIDs: !GetAtt VPCStack.Outputs.PublicSubnetIDs
         PrivateSubnetIDs: !GetAtt VPCStack.Outputs.PrivateSubnetIDs
@@ -230,8 +215,8 @@ Resources:
         DBPort: !GetAtt RDSStack.Outputs.AuroraEndPointPort
         DBUsername: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        BucketName: !Ref BucketName
+        BucketKeyPrefix: !Ref BucketKeyPrefix
         KeyPairName: !Ref KeyPairName
         EnvironmentName: !Ref EnvironmentName
         BastionSecurityGroupID: !GetAtt BastionStack.Outputs.BastionSecurityGroup
