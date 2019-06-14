@@ -2,9 +2,9 @@ global:
   owner: xl-aws-ami@xebialabs.com
   qsname: ami-xebialabs-devops-platform
   regions:
-    #- us-west-1
-    #- eu-west-1
-     - us-east-1
+    # - us-west-1
+    # - eu-west-1
+    - us-east-1
   reporting: true
 tests:
   existing-vpc-e2e:

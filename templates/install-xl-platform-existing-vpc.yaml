@@ -18,6 +18,8 @@ Metadata:
           - KeyPairName
           - XLDeployPassword
           - XLReleasePassword
+          - XLDASGInstanceName
+          - XLRASGInstanceName
       - Label:
           default: RDS Configuration
         Parameters:
@@ -45,6 +47,10 @@ Metadata:
         default: XL Deploy administrator password
       XLReleasePassword:
         default: XL Release administrator password
+      XLDASGInstanceName:
+        default: XL Deploy Auto-scaling Group name
+      XLRASGInstanceName:
+        default: XL Release Auto-scaling Group name
       RDSSecurityGroupID:
         default: RDS Security Group ID
       DBHost:
@@ -79,6 +85,14 @@ Parameters:
   PrivateSubnetIDs:
     Description: The private subnet XL should be deployed to
     Type: List<AWS::EC2::Subnet::Id>
+  XLDASGInstanceName:
+    Description: ASG instances name
+    Type: String
+    Default: xl-deploy-asg
+  XLRASGInstanceName:
+    Description: ASG instances name
+    Type: String
+    Default: xl-release-asg
   XLPlatformInstanceType:
     AllowedValues:
     - t2.medium
@@ -245,6 +259,21 @@ Resources:
         ReportingDBPort: !Ref DBPort
         ReportingDBUser: !Ref DBUsername
         ReportingDBPassword: !Ref DBPassword
+  MonitoringStack:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/cloudwatch.yaml
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        LoadBalancerARN: !GetAtt LoadBalancerStack.Outputs.LoadBalancerARN
+        XLDTargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLD
+        XLDASGName: !GetAtt XLDeployStack.Outputs.XLDASGName
+        XLDASGInstanceName: !Ref XLDASGInstanceName
+        XLRASGInstanceName: !Ref XLRASGInstanceName
+        XLRTargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLR
+        XLRASGName: !GetAtt XLReleaseStack.Outputs.XLRASGName
+        OperatorEMail: !Ref OperatorEMail
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable
