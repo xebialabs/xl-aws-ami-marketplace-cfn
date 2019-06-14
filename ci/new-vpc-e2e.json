@@ -2,22 +2,27 @@
     {
         "ParameterValue": "10.0.0.0/19",
         "ParameterKey": "CIDRBlockVpc"
-    }, 
+    },
     {
-        "ParameterValue": "0.0.0.0/0",
-        "ParameterKey": "YourHomeIPRange"
-    }, 
+        "ParameterValue": "$[taskcat_genpass_8A]",
+        "ParameterKey": "XLDeployPassword"
+    },
     {
-        "ParameterValue": "xl-aws-ami@xebialabs.com",
-        "ParameterKey": "OperatorEMail"
+        "ParameterValue": "$[taskcat_genpass_8A]",
+        "ParameterKey": "XLReleasePassword"
+    },
+    {
+        "ParameterValue": "$[taskcat_genpass_8A]",
+        "ParameterKey": "DBMasterPassword"
     },
     {
         "ParameterValue": "override",
         "ParameterKey": "KeyPairName"
     },
+
     {
         "ParameterValue": "$[taskcat_autobucket]",
-        "ParameterKey": "QSS3BucketName"
+        "ParameterKey": "BucketName"
     },
     {
         "ParameterValue": "arn:aws:acm:us-east-1:932770550094:certificate/7b814bab-2f10-4940-9cad-ee8f38422a0c",

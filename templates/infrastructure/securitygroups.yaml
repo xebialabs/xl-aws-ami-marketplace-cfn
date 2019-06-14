@@ -15,7 +15,6 @@ Parameters:
   BastionSecurityGroupID:
     Description: Bastion Host security group ID
     Type: AWS::EC2::SecurityGroup::Id
-    Default: sg-123456
 
 Resources:
   # This security group defines who/where is allowed to access the Application Load Balancer.
