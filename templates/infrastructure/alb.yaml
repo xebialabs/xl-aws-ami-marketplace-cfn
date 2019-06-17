@@ -15,14 +15,14 @@ Metadata:
           default: Application Loadbalancer
         Parameters:
           - LoadBalancerName
+          - CertificateArn
           - PublicSubnetIDs
           - TargetGroupNameXLD
-          - TargetGroupNameXLR 
-          - Paths
-          - PortXLR
           - PortXLD
+          - TargetGroupNameXLR
+          - PortXLR
       - Label:
-          default: VPCID
+          default: VPC
         Parameters:
           - VPCID
           - SecurityGroup
@@ -31,91 +31,121 @@ Parameters:
     Default: 'xebialabs-lb'
     Description: 'Name of Application LoadBalancer for XebiaLabs software'
     Type: String
-  Paths:
-    Default: '/'
-    Description: Path-patterns you want the loadbalancer to point to in your application
-    Type: CommaDelimitedList
-  PortXLD:
-    Default: '4516'
-    Description: Which loadbalancer port to use for XL Deploy
-    Type: Number  
-  PortXLR:
-    Default: '5516'
-    Description: Which loadbalancer port to use for XL Release
-    Type: Number    
+  CertificateArn:
+    Description: Which ACM certificate to use for the load balancer
+    Type: String
   PublicSubnetIDs:
     Default: ''
     Description: Public subnets for the load balancer.
     Type: List<AWS::EC2::Subnet::Id>
-  SecurityGroup:
-    Default: ''
-    Description: Which security groups to use
-    Type: List<AWS::EC2::SecurityGroup::Id>    
   TargetGroupNameXLD:
     Default: xl-deploy-tg
     Description: XL Deploy TargetGroup Name
     Type: String
+  PortXLD:
+    Default: '4516'
+    Description: Which port to use to connect to XL Deploy
+    Type: Number  
   TargetGroupNameXLR:
     Default: xl-release-tg
     Description: XL Release TargetGroup Name
     Type: String
+  PortXLR:
+    Default: '5516'
+    Description: Which port to use to connect to XL Release
+    Type: Number    
   VPCID:
     Default: ''
     Description: Environment VPCID
     Type: AWS::EC2::VPC::Id
+  SecurityGroup:
+    Default: ''
+    Description: Which security groups to use
+    Type: List<AWS::EC2::SecurityGroup::Id>    
 Resources:
-  albListenerXLD:
+  albListenerHTTP:
     Type: AWS::ElasticLoadBalancingV2::Listener    
     Properties:
       DefaultActions:
-        - TargetGroupArn:
-            Ref: albTargetGroupXLD
-          Type: forward
+        - Type: redirect
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Host: "#{host}"
+            Port: "443"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: HTTP_301
       LoadBalancerArn:
         Ref: applicationLoadBalancer
-      Port:
-        Ref: PortXLD
+      Port: 80
       Protocol: HTTP
-  albListenerXLR:
+  albListenerHTTPS:
     Type: AWS::ElasticLoadBalancingV2::Listener    
     Properties:
       DefaultActions:
-        - TargetGroupArn:
-            Ref: albTargetGroupXLR
-          Type: forward
+        - Type: redirect
+          RedirectConfig:
+            Protocol: "#{protocol}"
+            Host: "#{host}"
+            Port: "#{port}"
+            Path: "/release/"
+            Query: "#{query}"
+            StatusCode: HTTP_301
       LoadBalancerArn:
         Ref: applicationLoadBalancer
-      Port:
-        Ref: PortXLR
-      Protocol: HTTP    
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn:
+            Ref: CertificateArn
+  # N.B.: A rule like albListenerRuleXLDForward is not needed for XL Release
+  # because the default action takes care of that
+  albListenerRuleXLDForward:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule    
+    Properties:
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /deploy
+      Actions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: "#{protocol}"
+            Host: "#{host}"
+            Port: "#{port}"
+            Path: "/deploy/"
+            StatusCode: HTTP_301
+      ListenerArn:
+        Ref: albListenerHTTPS
+      Priority: 1
   albListenerRuleXLD:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule    
     Properties:
-      Actions:
-        - TargetGroupArn:
-            Ref: albTargetGroupXLD
-          Type: forward
       Conditions:
         - Field: path-pattern
           Values:
-            Ref: Paths
+            - /deploy/*
+      Actions:
+        - Type: forward
+          TargetGroupArn:
+            Ref: albTargetGroupXLD
       ListenerArn:
-        Ref: albListenerXLD
-      Priority: 1
+        Ref: albListenerHTTPS
+      Priority: 2
   albListenerRuleXLR:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      Actions:
-        - TargetGroupArn:
-            Ref: albTargetGroupXLR
-          Type: forward
       Conditions:
         - Field: path-pattern
           Values:
-            Ref: Paths
+            - /release/*
+      Actions:
+        - Type: forward
+          TargetGroupArn:
+            Ref: albTargetGroupXLR
       ListenerArn:
-        Ref: albListenerXLR
-      Priority: 1
+        Ref: albListenerHTTPS
+      Priority: 3
   albTargetGroupXLD:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup    
     Properties:
@@ -129,7 +159,7 @@ Resources:
       Matcher:
         HttpCode: 200-402
       HealthCheckProtocol: HTTP
-      HealthCheckPath: /deployit/ha/health
+      HealthCheckPath: /deploy/deployit/ha/health
       HealthCheckIntervalSeconds: 10
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
@@ -140,7 +170,6 @@ Resources:
           Value: lb_cookie
         - Key: stickiness.lb_cookie.duration_seconds
           Value: '86400'
-
   albTargetGroupXLR:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -154,7 +183,7 @@ Resources:
       Matcher:
         HttpCode: 200-402
       HealthCheckProtocol: HTTP
-      HealthCheckPath: /ha/health
+      HealthCheckPath: /release/ha/health
       HealthCheckIntervalSeconds: 10
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
@@ -165,8 +194,8 @@ Resources:
           Value: lb_cookie
         - Key: stickiness.lb_cookie.duration_seconds
           Value: '86400'
-
   applicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name:
         Ref: LoadBalancerName
@@ -175,7 +204,6 @@ Resources:
         Ref: SecurityGroup
       Subnets:
         Ref: PublicSubnetIDs
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
 Outputs:
   LoadBalancerARN: 
     Description: The ARN of the ALB
@@ -185,25 +213,21 @@ Outputs:
     Value:
       Fn::Join:
         - ''
-        - - http://
+        - - https://
           - Fn::GetAtt:
               - applicationLoadBalancer
               - DNSName
-          - ':'
-          - Ref:
-              PortXLD
+          - '/deploy/'
   LoadBalancerUrlXLR:
-    Description: URL for XL Deploy
+    Description: URL for XL Release
     Value:
       Fn::Join:
         - ''
-        - - http://
+        - - https://
           - Fn::GetAtt:
               - applicationLoadBalancer
               - DNSName
-          - ':'
-          - Ref:
-              PortXLR
+          - '/release/'
   TargetGroupXLD:
     Description: ARN of XL Deploy TargetGroup
     Value: !Ref albTargetGroupXLD
