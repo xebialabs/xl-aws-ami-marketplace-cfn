@@ -168,19 +168,19 @@ Resources:
         RDSSecurityGroupID: !Ref RDSSecurityGroupID
         BastionSecurityGroupID: !Ref BastionSecurityGroupID
   RDSCreateDBLambda:
-   Type: AWS::CloudFormation::Stack
-   Properties:
-     TemplateURL: !Sub
-     - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds-lambda.yaml
-     - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
-     Parameters:
-       PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
-       DBUser: !Ref DBUsername
-       DBPassword: !Ref DBPassword
-       DBHost: !Ref DBHost
-       AuroraRDSSecurityGroupID: !Ref RDSSecurityGroupID
-       QSS3BucketName: !Ref QSS3BucketName
-       QSS3KeyPrefix: !Ref QSS3KeyPrefix
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds-lambda.yaml
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
+        DBUser: !Ref DBUsername
+        DBPassword: !Ref DBPassword
+        DBHost: !Ref DBHost
+        AuroraRDSSecurityGroupID: !Ref RDSSecurityGroupID
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   EFSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -205,24 +205,25 @@ Resources:
         PublicSubnetIDs: !Join [ ",", !Ref PublicSubnetIDs ]
         SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
   XLDeployStack:
-   Type: 'AWS::CloudFormation::Stack'
-   Properties:
-     TemplateURL: !Sub
-     - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-deploy.yaml
-     - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
-     Parameters:
-       OperatorEMail: !Ref OperatorEMail
-       PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
-       InstanceType: !Ref XLPlatformInstanceType
-       KeyPairName: !Ref KeyPairName
-       XLDeployAdminPassword: !Ref XLDeployPassword
-       TargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLD
-       SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.XLDeployASGSecurityGroup
-       DBHost: !Ref DBHost
-       DBPort: !Ref DBPort
-       DBUser: !Ref DBUsername
-       DBPassword: !Ref DBPassword
-       EfsId: !GetAtt EFSStack.Outputs.Filesystem
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-deploy.yaml
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        OperatorEMail: !Ref OperatorEMail
+        PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
+        InstanceType: !Ref XLPlatformInstanceType
+        KeyPairName: !Ref KeyPairName
+        XLDeployAdminPassword: !Ref XLDeployPassword
+        TargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLD
+        SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.XLDeployASGSecurityGroup
+        DBHost: !Ref DBHost
+        DBPort: !Ref DBPort
+        DBUser: !Ref DBUsername
+        DBPassword: !Ref DBPassword
+        EfsId: !GetAtt EFSStack.Outputs.Filesystem
+        AWSProductCode: TODO-123456789
   XLReleaseStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -245,6 +246,7 @@ Resources:
         ReportingDBPort: !Ref DBPort
         ReportingDBUser: !Ref DBUsername
         ReportingDBPassword: !Ref DBPassword
+        AWSProductCode: TODO-123456789
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable

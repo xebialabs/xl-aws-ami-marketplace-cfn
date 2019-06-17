@@ -71,6 +71,9 @@ Parameters:
     Description: The CloudWatch log group to push XL Deploy logs to
     Type: String
     Default: '/aws/ec2/xld'
+  AWSProductCode:
+    Description: The AWS AMI Marketplace Listing Product Code
+    Type: String
 #  SslCertificateArn:
 #    Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs  instances
 #    Type: String
@@ -78,6 +81,8 @@ Parameters:
 
 Mappings:
   AWSRegionAMI:
+    eu-central-1:
+      AMIID: ami-03cf2c7f397cad53a
     eu-west-1:
       AMIID: ami-0e54abdfe1e08cc3c
     eu-west-2:
@@ -173,6 +178,13 @@ Resources:
                     enabled = false
                   }
 
+                  license {
+                    kind = ami
+                    ami {
+                      productCode = "{{ AWSProductCode }}"
+                    }
+                  }
+
                   cluster {
                     # mode: "default", "hot-standby", "full"
                     mode = hot-standby
@@ -226,6 +238,7 @@ Resources:
 
                 }
               context:
+                AWSProductCode: !Ref 'AWSProductCode'
                 DBUser: !Ref 'DBUser'
                 DBPassword: !Ref 'DBPassword'
                 DBHost: !Ref 'DBHost'
@@ -315,7 +328,7 @@ Resources:
               group: xl
               context:
                 LogGroup: !Ref LogGroup
-          commands: 
+          commands:
             00_remove_xlr:
               command: rm -Rf /opt/xlr /etc/systemd/system/xlr.service
             01_configure_wrapper_memory:

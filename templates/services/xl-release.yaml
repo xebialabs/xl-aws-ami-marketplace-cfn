@@ -86,9 +86,14 @@ Parameters:
     Description: The CloudWatch log group for XL Release
     Type: String
     Default: /aws/ec2/xlr
+  AWSProductCode:
+    Description: The AWS AMI Marketplace Listing Product Code
+    Type: String
 
 Mappings:
   AWSRegionAMI:
+    eu-central-1:
+      AMIID: ami-03cf2c7f397cad53a
     eu-west-1:
       AMIID: ami-0e54abdfe1e08cc3c
     eu-west-2:
@@ -203,6 +208,12 @@ Resources:
                       }
                     }
                   }
+                  license {
+                    kind = ami
+                    ami {
+                      productCode = "{{ AWSProductCode }}"
+                    }
+                  }
                   metrics {
                     enabled = true
                   }
@@ -222,6 +233,7 @@ Resources:
               owner: xl
               group: xl
               context:
+                AWSProductCode: !Ref AWSProductCode
                 DBUser: !Ref 'DBUser'
                 DBPassword: !Ref 'DBPassword'
                 DBHost: !Ref 'DBHost'
@@ -266,7 +278,7 @@ Resources:
                       <createLogGroup>true</createLogGroup>
                       <queueLength>100</queueLength>
                       <groupName>{{LogGroup}}</groupName>
-                      <streamName>XLRelease-${HOSTNAME:-default}</streamName> 
+                      <streamName>XLRelease-${HOSTNAME:-default}</streamName>
                       <layout>
                           <pattern>[%X{a} %X{b}] %-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
                       </layout>
