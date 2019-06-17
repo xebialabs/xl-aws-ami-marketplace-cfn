@@ -21,16 +21,7 @@ Parameters:
   XLRASGInstanceName:
     Type: String
     Description: Human-readable name for the Auto-scaling Group associated with the XL Release instances
-  OperatorEMail:
-    Type: String
-    Description: The email address to send notifications to
 Resources:
-  NotificationTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      Subscription:
-        - Endpoint: !Ref 'OperatorEMail'
-          Protocol: email
   XLRUnhealthyAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -65,8 +56,6 @@ Resources:
       Threshold: 0
       MetricName: UnHealthyHostCount
       ComparisonOperator: GreaterThanThreshold
-      AlarmActions: 
-        - !Ref NotificationTopic
   XLDUnhealthyAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -101,8 +90,6 @@ Resources:
       Threshold: 1 # Because we're running in active/passive mode
       MetricName: UnHealthyHostCount
       ComparisonOperator: GreaterThanThreshold
-      AlarmActions: 
-        - !Ref NotificationTopic
   XLRCPUAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -118,8 +105,6 @@ Resources:
       MetricName: CPUUtilization
       Threshold: 40
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      AlarmActions: 
-        - !Ref NotificationTopic
   XLDCPUAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -135,8 +120,6 @@ Resources:
       MetricName: CPUUtilization
       Threshold: 40
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      AlarmActions: 
-        - !Ref NotificationTopic
   XLRFreeMemoryPercentage:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -145,8 +128,6 @@ Resources:
       Threshold: 20
       ComparisonOperator: LessThanThreshold
       EvaluationPeriods: 2
-      AlarmActions: 
-        - !Ref NotificationTopic
       Metrics:
         - Id: free_memory
           Label: Total free memory
@@ -183,8 +164,6 @@ Resources:
       Threshold: 20
       ComparisonOperator: LessThanThreshold
       EvaluationPeriods: 2
-      AlarmActions: 
-        - !Ref NotificationTopic
       Metrics:
         - Id: free_memory
           Label: Total free memory
