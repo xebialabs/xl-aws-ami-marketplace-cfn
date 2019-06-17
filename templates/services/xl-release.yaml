@@ -3,7 +3,7 @@ Description: |
   This template will launch 2 EC2 instances with XL Release
 Parameters:
   InstanceType:
-    Description: XL Deploy EC2 instance type
+    Description: XL Release EC2 instance type
     Type: String
     Default: t2.medium
     AllowedValues: [ t2.medium, t2.large, t2.xlarge, t2.2xlarge,
@@ -14,12 +14,7 @@ Parameters:
   ASGInstanceName:
     Description: ASG instances name
     Type: String
-    Default: xl-release-asg
-  OperatorEMail:
-    Description: EMail address to notify if there are any scaling operations
-    Type: String
-    AllowedPattern: ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
-    ConstraintDescription: must be a valid email address.
+    Default: xl-release-asg-marketplace
   KeyPairName:
     Description: The EC2 Key Pair to allow SSH access to the instances
     Type: AWS::EC2::KeyPair::KeyName
@@ -86,17 +81,11 @@ Parameters:
     Description: The CloudWatch log group for XL Release
     Type: String
     Default: /aws/ec2/xlr
+  AMIID:
+    Description: The AMI ID used to for XL DevoPS Platform
+    Type: AWS::EC2::Image::Id
 
 Mappings:
-  AWSRegionAMI:
-    eu-west-1:
-      AMIID: ami-0e54abdfe1e08cc3c
-    eu-west-2:
-      AMIID: ami-07f0a686a89aae59b
-    us-east-1:
-      AMIID: ami-08074489a82d1fc7a
-    us-west-1:
-      AMIID: ami-0b76fea147fef2e00
   DBType:
     'org.postgresql.Driver':
       Name: 'postgresql'
@@ -115,12 +104,6 @@ Mappings:
 #  SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
 
 Resources:
-  NotificationTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      Subscription:
-        - Endpoint: !Ref 'OperatorEMail'
-          Protocol: email
   XLReleaseGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -135,10 +118,6 @@ Resources:
       MaxSize: '2'
       TargetGroupARNs:
         - !Ref TargetGroupARN
-      NotificationConfigurations:
-        - TopicARN: !Ref 'NotificationTopic'
-          NotificationTypes: ['autoscaling:EC2_INSTANCE_LAUNCH', 'autoscaling:EC2_INSTANCE_LAUNCH_ERROR',
-                              'autoscaling:EC2_INSTANCE_TERMINATE', 'autoscaling:EC2_INSTANCE_TERMINATE_ERROR']
     CreationPolicy:
       ResourceSignal:
         Timeout: PT10M
@@ -175,7 +154,7 @@ Resources:
                 http.bind.address=0.0.0.0
                 jcr.repository.path=repository
                 client.automatically.map.all.deployables.on.initial=false
-                http.context.root=/
+                http.context.root=/release
                 importable.packages.path=importablePackages
                 server.mapping.override.deployed.fields.on.update=true
               owner: xl
@@ -409,7 +388,7 @@ Resources:
             - 'jmxtrans'
     Properties:
       KeyName: !Ref 'KeyPairName'
-      ImageId: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
+      ImageId: !Ref 'AMIID'
       SecurityGroups: [!Ref 'SecurityGroup']
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'XLRInstanceProfile'
