@@ -14,12 +14,7 @@ Parameters:
   ASGInstanceName:
     Description: ASG instances name
     Type: String
-    Default: xl-deploy-asg
-  OperatorEMail:
-    Description: EMail address to notify if there are any scaling operations
-    Type: String
-    AllowedPattern: ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
-    ConstraintDescription: must be a valid email address.
+    Default: xl-deploy-asg-marketplace
   KeyPairName:
     Description: The EC2 Key Pair to allow SSH access to the instances
     Type: AWS::EC2::KeyPair::KeyName
@@ -71,6 +66,9 @@ Parameters:
     Description: The CloudWatch log group to push XL Deploy logs to
     Type: String
     Default: '/aws/ec2/xld'
+  AMIID:
+    Description: The AMI ID used to for XL DevoPS Platform
+    Type: AWS::EC2::Image::Id
   AWSProductCode:
     Description: The AWS AMI Marketplace Listing Product Code
     Type: String
@@ -78,19 +76,7 @@ Parameters:
 #    Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs  instances
 #    Type: String
 #    Default: ':default'
-
 Mappings:
-  AWSRegionAMI:
-    eu-central-1:
-      AMIID: ami-03cf2c7f397cad53a
-    eu-west-1:
-      AMIID: ami-0e54abdfe1e08cc3c
-    eu-west-2:
-      AMIID: ami-07f0a686a89aae59b
-    us-east-1:
-      AMIID: ami-08074489a82d1fc7a
-    us-west-1:
-      AMIID: ami-0b76fea147fef2e00
   DBType:
     'org.postgresql.Driver':
       Name: 'postgresql'
@@ -103,12 +89,6 @@ Mappings:
 #  SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
 
 Resources:
-  NotificationTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      Subscription:
-        - Endpoint: !Ref 'OperatorEMail'
-          Protocol: email
   XLDeployGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -123,10 +103,6 @@ Resources:
       MaxSize: '2'
       TargetGroupARNs:
         - !Ref TargetGroupARN
-      NotificationConfigurations:
-        - TopicARN: !Ref 'NotificationTopic'
-          NotificationTypes: ['autoscaling:EC2_INSTANCE_LAUNCH', 'autoscaling:EC2_INSTANCE_LAUNCH_ERROR',
-                              'autoscaling:EC2_INSTANCE_TERMINATE', 'autoscaling:EC2_INSTANCE_TERMINATE_ERROR']
     CreationPolicy:
       ResourceSignal:
         Timeout: PT10M
@@ -152,7 +128,7 @@ Resources:
                 client.server_poll.delay=30000
                 ssl=false
                 http.bind.address=0.0.0.0
-                http.context.root=/
+                http.context.root=/deploy
                 threads.max=24
                 ssl.mutual=false
                 http.upload.buffer=262144
@@ -400,7 +376,7 @@ Resources:
             - 'jmxtrans'
     Properties:
       KeyName: !Ref 'KeyPairName'
-      ImageId: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
+      ImageId: !Ref 'AMIID'
       SecurityGroups: [!Ref 'SecurityGroup']
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'XLDInstanceProfile'

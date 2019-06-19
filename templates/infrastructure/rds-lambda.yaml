@@ -18,13 +18,13 @@ Parameters:
     Description: The Postgres DB Password
     Type: String
     NoEcho: True
-  QSS3BucketName:
+  BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
     Default: aws-quickstart
     Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
     Type: String
-  QSS3KeyPrefix:
+  BucketKeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
     Default: quickstart-xl-devops-platform/
@@ -38,8 +38,8 @@ Resources:
     Properties:
       ServiceToken: !GetAtt CopyZipsFunction.Arn
       DestBucket: !Ref LambdaZipsBucket
-      SourceBucket: !Ref QSS3BucketName
-      Prefix: !Ref QSS3KeyPrefix
+      SourceBucket: !Ref BucketName
+      Prefix: !Ref BucketKeyPrefix
       Objects:
         - functions/packages/create-db/lambda.zip
   CopyZipsRole:
@@ -64,13 +64,13 @@ Resources:
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+                  - !Sub 'arn:aws:s3:::${BucketName}/${BucketKeyPrefix}*'
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${LambdaZipsBucket}/${QSS3KeyPrefix}*'
+                  - !Sub 'arn:aws:s3:::${LambdaZipsBucket}/${BucketKeyPrefix}*'
   CopyZipsFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -186,7 +186,7 @@ Resources:
         SubnetIds: !Ref PrivateSubnetIDs
       Code:
         S3Bucket: !Ref LambdaZipsBucket
-        S3Key: !Sub "${QSS3KeyPrefix}functions/packages/create-db/lambda.zip"
+        S3Key: !Sub "${BucketKeyPrefix}functions/packages/create-db/lambda.zip"
   RDSCreateDatabases:
     Type: Custom::RDSCreateDatabases
     Properties:
