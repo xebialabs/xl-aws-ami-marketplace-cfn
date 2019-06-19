@@ -17,6 +17,8 @@ Metadata:
           - XLPlatformInstanceType
           - XLDeployPassword
           - XLReleasePassword
+          - XLDASGInstanceName
+          - XLRASGInstanceName
       - Label:
           default: RDS Configuration
         Parameters:
@@ -46,6 +48,10 @@ Metadata:
         default: XL instance type
       KeyPairName:
         default: KeyPair name for XebiaLabs software
+      XLDASGInstanceName:
+        default: Auto-scaling group name for XL Deploy
+      XLRASGInstanceName:
+        default: Auto-scaling group name for XL Release
       XLDeployPassword:
         default: XL Deploy administrator password
       XLReleasePassword:
@@ -168,6 +174,14 @@ Parameters:
     Description: "Ip range off your home network from where you can access the bastion hosts"
     Type: String
     Default: '0.0.0.0/0'
+  XLRASGInstanceName:
+    Description: Auto-scaling group name for XL Release
+    Type: String
+    Default: xl-release-asg
+  XLDASGInstanceName:
+    Description: Auto-scaling group name for XL Deploy
+    Type: String
+    Default: xl-deploy-asg
 
 Conditions:
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
@@ -175,23 +189,23 @@ Conditions:
 Mappings:
   AWSRegionAMI:
     eu-central-1:
-      AMIID: ami-09b3778dd37bc1f37
+      AMIID: ami-0a3ec01d02c9e40f5
     eu-north-1:
-      AMIID: ami-020490bb2799fb252
+      AMIID: ami-0206e5a2e30311ced
     eu-west-1:
-      AMIID: ami-0889c7c065b4c45c5
+      AMIID: ami-0b5919b9f8c923161
     eu-west-2:
-      AMIID: ami-0e5b23d50a47f9588
+      AMIID: ami-0118f8e353c92217b
     eu-west-3:
-      AMIID: ami-0dda0ae48212a0695
+      AMIID: ami-049c151e19a0f4662
     us-east-1:
-      AMIID: ami-0b96783b67b839247
+      AMIID: ami-03b2d732343a35a1c
     us-east-2:
-      AMIID: ami-02157a78ca4ed0991
+      AMIID: ami-081a5e68f51633f4c
     us-west-1:
-      AMIID: ami-047ca4cc88ddfa06e
+      AMIID: ami-0d9eb8f1302a39916
     us-west-2:
-      AMIID: ami-0b0548c807ce52290
+      AMIID: ami-02a419e084b92746e
 
 Resources:
   VPCStack:
@@ -242,6 +256,8 @@ Resources:
         PublicSubnetIDs: !GetAtt VPCStack.Outputs.PublicSubnetIDs
         PrivateSubnetIDs: !GetAtt VPCStack.Outputs.PrivateSubnetIDs
         XLPlatformInstanceType: !Ref XLPlatformInstanceType
+        XLRASGInstanceName: !Ref XLRASGInstanceName
+        XLDASGInstanceName: !Ref XLDASGInstanceName
         XLDeployPassword: !Ref XLDeployPassword
         XLReleasePassword: !Ref XLReleasePassword
         RDSSecurityGroupID: !GetAtt RDSStack.Outputs.AuroraRDSSecurityGroupID
