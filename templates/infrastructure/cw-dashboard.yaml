@@ -80,13 +80,13 @@ Resources:
                         "view": "timeSeries",
                         "stacked": false,
                         "metrics": [
-                            [ "XebiaLabs", "HeapMemoryUsage_max", "AutoScalingGroup", "${XLRASGInstanceName}" ],
-                            [ ".", "HeapMemoryUsage_committed", ".", "." ],
-                            [ ".", "HeapMemoryUsage_init", ".", "." ],
-                            [ ".", "HeapMemoryUsage_used", ".", "." ]
+                            [ "XebiaLabs", "NonHeapMemoryUsage_init", "AutoScalingGroup", "${XLDASGInstanceName}" ],
+                            [ ".", "NonHeapMemoryUsage_used", ".", "." ],
+                            [ ".", "NonHeapMemoryUsage_max", ".", "." ],
+                            [ ".", "NonHeapMemoryUsage_committed", ".", "." ]
                         ],
                         "region": "${AWS::Region}",
-                        "title": "XL Release - Heap Memory Information"
+                        "title": "XL Deploy - Non Heap Memory Information"
                     }
                 },
                 {
@@ -99,13 +99,13 @@ Resources:
                         "view": "timeSeries",
                         "stacked": false,
                         "metrics": [
-                            [ "XebiaLabs", "NonHeapMemoryUsage_init", "AutoScalingGroup", "${XLDASGInstanceName}" ],
-                            [ ".", "NonHeapMemoryUsage_used", ".", "." ],
-                            [ ".", "NonHeapMemoryUsage_max", ".", "." ],
-                            [ ".", "NonHeapMemoryUsage_committed", ".", "." ]
+                            [ "XebiaLabs", "HeapMemoryUsage_max", "AutoScalingGroup", "${XLRASGInstanceName}" ],
+                            [ ".", "HeapMemoryUsage_committed", ".", "." ],
+                            [ ".", "HeapMemoryUsage_init", ".", "." ],
+                            [ ".", "HeapMemoryUsage_used", ".", "." ]
                         ],
                         "region": "${AWS::Region}",
-                        "title": "XL Deploy - Non Heap Memory Information"
+                        "title": "XL Release - Heap Memory Information"
                     }
                 },
                 {
