@@ -18,6 +18,8 @@ Metadata:
           - XLPlatformInstanceType
           - XLDeployPassword
           - XLReleasePassword
+          - XLDASGInstanceName
+          - XLRASGInstanceName
       - Label:
           default: RDS Configuration
         Parameters:
@@ -57,6 +59,10 @@ Metadata:
         default: XL Deploy administrator password
       XLReleasePassword:
         default: XL Release administrator password
+      XLDASGInstanceName:
+        default: XL Deploy Auto-scaling Group name
+      XLRASGInstanceName:
+        default: XL Release Auto-scaling Group name
       RDSSecurityGroupID:
         default: RDS Security Group ID
       DBHost:
@@ -88,6 +94,14 @@ Parameters:
   PrivateSubnetIDs:
     Description: The private subnet XL should be deployed to
     Type: List<AWS::EC2::Subnet::Id>
+  XLDASGInstanceName:
+    Description: ASG instances name
+    Type: String
+    Default: xl-deploy-asg
+  XLRASGInstanceName:
+    Description: ASG instances name
+    Type: String
+    Default: xl-release-asg
   XLPlatformInstanceType:
     AllowedValues:
     - t2.medium
@@ -164,23 +178,23 @@ Parameters:
 Mappings:
   AWSRegionAMI:
     eu-central-1:
-      AMIID: ami-09b3778dd37bc1f37
+      AMIID: ami-0a3ec01d02c9e40f5
     eu-north-1:
-      AMIID: ami-020490bb2799fb252
+      AMIID: ami-0206e5a2e30311ced
     eu-west-1:
-      AMIID: ami-0889c7c065b4c45c5
+      AMIID: ami-0b5919b9f8c923161
     eu-west-2:
-      AMIID: ami-0e5b23d50a47f9588
+      AMIID: ami-0118f8e353c92217b
     eu-west-3:
-      AMIID: ami-0dda0ae48212a0695
+      AMIID: ami-049c151e19a0f4662
     us-east-1:
-      AMIID: ami-0b96783b67b839247
+      AMIID: ami-03b2d732343a35a1c
     us-east-2:
-      AMIID: ami-02157a78ca4ed0991
+      AMIID: ami-081a5e68f51633f4c
     us-west-1:
-      AMIID: ami-047ca4cc88ddfa06e
+      AMIID: ami-0d9eb8f1302a39916
     us-west-2:
-      AMIID: ami-0b0548c807ce52290
+      AMIID: ami-02a419e084b92746e
 Conditions:
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
 Resources:
@@ -240,6 +254,7 @@ Resources:
      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/services/xl-deploy.yaml
      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
      Parameters:
+       ASGInstanceName: !Ref XLDASGInstanceName  
        PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
        InstanceType: !Ref XLPlatformInstanceType
        KeyPairName: !Ref KeyPairName
@@ -259,6 +274,7 @@ Resources:
       - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/services/xl-release.yaml
       - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
+        ASGInstanceName: !Ref XLRASGInstanceName
         PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
         InstanceType: !Ref XLPlatformInstanceType
         KeyPairName: !Ref KeyPairName
@@ -281,8 +297,22 @@ Resources:
       - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/cw-dashboard.yaml
       - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        XLDASGInstanceName: xl-deploy-asg
-        XLRASGInstanceName: xl-release-asg
+        XLDASGInstanceName: !Ref XLDASGInstanceName
+        XLRASGInstanceName: !Ref XLRASGInstanceName
+  MonitoringStack:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub
+      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/cloudwatch.yaml
+      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        LoadBalancerARN: !GetAtt LoadBalancerStack.Outputs.LoadBalancerARN
+        XLDTargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLD
+        XLDASGName: !GetAtt XLDeployStack.Outputs.XLDASGName
+        XLDASGInstanceName: !Ref XLDASGInstanceName
+        XLRASGInstanceName: !Ref XLRASGInstanceName
+        XLRTargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLR
+        XLRASGName: !GetAtt XLReleaseStack.Outputs.XLRASGName
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable

@@ -8,4 +8,6 @@
 
 # Cleanup s3 buckets from taskcat runs
 
-`for i in `aws s3 ls | grep taskcat | awk '{print $3}'`; do aws s3 rb s3://$i --force; done`
+``` 
+for i in `aws s3 ls | grep taskcat | awk '{print $3}'`; do aws s3 rb s3://$i --force; done
+```

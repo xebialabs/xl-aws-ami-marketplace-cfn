@@ -205,6 +205,9 @@ Resources:
       Subnets:
         Ref: PublicSubnetIDs
 Outputs:
+  LoadBalancerARN: 
+    Description: The ARN of the ALB
+    Value: !Ref applicationLoadBalancer
   LoadBalancerUrlXLD:
     Description: URL for XL Deploy
     Value:

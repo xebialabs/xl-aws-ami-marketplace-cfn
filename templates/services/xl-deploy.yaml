@@ -354,9 +354,13 @@ Resources:
                 REGION: !Sub ${AWS::Region}
         jmxtrans:
           commands:
-            01_create_jmxtrans_pid_folder:
+            01_set_asg_name: 
+              command: sed -i "s/{{ ASG_NAME }}/$ASG_NAME/g" /var/lib/jmxtrans/jmxtrans-cloudwatch.json
+              env:
+                ASG_NAME: !Ref ASGInstanceName
+            02_create_jmxtrans_pid_folder:
               command: sudo mkdir /var/run/jmxtrans && sudo chown jmxtrans:jmxtrans /var/run/jmxtrans
-            02_start_jmxtrans:
+            03_start_jmxtrans:
               command: sudo /usr/share/jmxtrans/bin/jmxtrans start
         configSets:
           configuration:
@@ -406,4 +410,7 @@ Resources:
       Roles:
         - !Ref "CloudwatchRole"
 
-# Outputs:
+Outputs:
+  XLDASGName:
+    Description: The name of the XL Deploy Auto-scaling Group 
+    Value: !Ref XLDeployGroup
