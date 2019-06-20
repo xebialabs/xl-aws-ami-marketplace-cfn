@@ -354,7 +354,11 @@ Resources:
                 REGION: !Sub ${AWS::Region}
         jmxtrans:
           commands:
-            01_start_jmxtrans:
+            01_set_asg_name:
+              command: sed -i "s/{{ ASG_NAME }}/$ASG_NAME/g" /var/lib/jmxtrans/jmxtrans-cloudwatch.json
+              env:	
+                ASG_NAME: !Ref ASGInstanceName
+            02_start_jmxtrans:
               command: sudo systemctl start jmxtrans
         configSets:
           configuration:
