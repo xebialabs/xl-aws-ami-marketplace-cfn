@@ -290,6 +290,15 @@ Resources:
         ReportingDBUser: !Ref DBUsername
         ReportingDBPassword: !Ref DBPassword
         AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
+  CloudWatchDashboard:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub
+      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/cw-dashboard.yaml
+      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        XLDASGInstanceName: !Ref XLDASGInstanceName
+        XLRASGInstanceName: !Ref XLRASGInstanceName
   MonitoringStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:

@@ -1,0 +1,211 @@
+Description: Setup cloudwatch dashboards for the XL Platform
+Parameters:
+  XLDASGInstanceName:
+    Description: The instance name of the XL Deploy Auto-scaling Group
+    Type: String
+  XLRASGInstanceName:
+    Description: The instance name of the XL Release Auto-scaling Group
+    Type: String
+Resources:
+  CloudWatchDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: XLPlatform
+      DashboardBody: !Sub |
+        {
+            "widgets": [
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 0,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ "XebiaLabs", "ThreadCount", "AutoScalingGroup", "${XLDASGInstanceName}" ],
+                            [ ".", "PeakThreadCount", ".", "." ],
+                            [ ".", "DaemonThreadCount", ".", "." ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "title": "XL Deploy - Thread Information",
+                        "region": "${AWS::Region}",
+                        "period": 300
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 12,
+                    "y": 0,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": [
+                            [ "XebiaLabs", "ThreadCount", "AutoScalingGroup", "${XLRASGInstanceName}" ],
+                            [ ".", "DaemonThreadCount", ".", "." ],
+                            [ ".", "PeakThreadCount", ".", "." ]
+                        ],
+                        "region": "${AWS::Region}",
+                        "title": "XL Release - Thread Information"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 6,
+                    "width": 6,
+                    "height": 6,
+                    "properties": {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": [
+                            [ "XebiaLabs", "HeapMemoryUsage_max", "AutoScalingGroup", "${XLDASGInstanceName}" ],
+                            [ ".", "HeapMemoryUsage_init", ".", "." ],
+                            [ ".", "HeapMemoryUsage_committed", ".", "." ],
+                            [ ".", "HeapMemoryUsage_used", ".", "." ]
+                        ],
+                        "region": "${AWS::Region}",
+                        "title": "XL Deploy - Heap Memory Information"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 6,
+                    "y": 6,
+                    "width": 6,
+                    "height": 6,
+                    "properties": {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": [
+                            [ "XebiaLabs", "NonHeapMemoryUsage_init", "AutoScalingGroup", "${XLDASGInstanceName}" ],
+                            [ ".", "NonHeapMemoryUsage_used", ".", "." ],
+                            [ ".", "NonHeapMemoryUsage_max", ".", "." ],
+                            [ ".", "NonHeapMemoryUsage_committed", ".", "." ]
+                        ],
+                        "region": "${AWS::Region}",
+                        "title": "XL Deploy - Non Heap Memory Information"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 12,
+                    "y": 6,
+                    "width": 6,
+                    "height": 6,
+                    "properties": {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": [
+                            [ "XebiaLabs", "HeapMemoryUsage_max", "AutoScalingGroup", "${XLRASGInstanceName}" ],
+                            [ ".", "HeapMemoryUsage_committed", ".", "." ],
+                            [ ".", "HeapMemoryUsage_init", ".", "." ],
+                            [ ".", "HeapMemoryUsage_used", ".", "." ]
+                        ],
+                        "region": "${AWS::Region}",
+                        "title": "XL Release - Heap Memory Information"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 18,
+                    "y": 6,
+                    "width": 6,
+                    "height": 6,
+                    "properties": {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": [
+                            [ "XebiaLabs", "NonHeapMemoryUsage_committed", "AutoScalingGroup", "${XLRASGInstanceName}" ],
+                            [ ".", "NonHeapMemoryUsage_max", ".", "." ],
+                            [ ".", "NonHeapMemoryUsage_used", ".", "." ],
+                            [ ".", "NonHeapMemoryUsage_init", ".", "." ]
+                        ],
+                        "region": "${AWS::Region}",
+                        "title": "XL Release - Non Heap Memory Information"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 12,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "m1 - m2", "label": "UsedMemory", "id": "e1" } ],
+                            [ "XebiaLabs", "TotalPhysicalMemorySize", "AutoScalingGroup", "${XLDASGInstanceName}", { "id": "m1" } ],
+                            [ ".", "FreePhysicalMemorySize", ".", ".", { "id": "m2", "visible": false } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "title": "XL Deploy - O/S Memory Information",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 12,
+                    "y": 12,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": [
+                          [ { "expression": "m1 - m2", "label": "UsedMemory", "id": "e1" } ],
+                          [ "XebiaLabs", "TotalPhysicalMemorySize", "AutoScalingGroup", "${XLRASGInstanceName}", { "id": "m1" } ],
+                          [ ".", "FreePhysicalMemorySize", ".", ".", { "id": "m2", "visible": false } ]
+                        ],
+                        "region": "${AWS::Region}",
+                        "title": "XL Release - O/S Memory Information",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 18,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": [
+                            [ "XebiaLabs", "SystemLoadAverage", "AutoScalingGroup", "${XLDASGInstanceName}" ],
+                            [ ".", "AvailableProcessors", ".", "." ]
+                        ],
+                        "region": "${AWS::Region}",
+                        "title": "XL Deploy - CPU Load & Count"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 12,
+                    "y": 18,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "title": "XL Release - CPU & Load",
+                        "metrics": [
+                            [ "XebiaLabs", "SystemLoadAverage", "AutoScalingGroup", "${XLRASGInstanceName}" ],
+                            [ ".", "AvailableProcessors", ".", "." ]
+                        ],
+                        "region": "${AWS::Region}"
+                    }
+                }
+            ]
+        }
