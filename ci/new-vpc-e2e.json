@@ -16,7 +16,7 @@
         "ParameterKey": "DBMasterPassword"
     },
     {
-        "ParameterValue": "override",
+        "ParameterValue": "eqevani-ami",
         "ParameterKey": "KeyPairName"
     },
 
@@ -25,7 +25,7 @@
         "ParameterKey": "BucketName"
     },
     {
-        "ParameterValue": "arn:aws:acm:us-east-1:932770550094:certificate/7b814bab-2f10-4940-9cad-ee8f38422a0c",
+        "ParameterValue": " arn:aws:acm:eu-west-1:932770550094:certificate/44136f73-3cd3-407d-bbea-9b6f8f75eccd",
         "ParameterKey": "CertificateArn"
     }
 ]
