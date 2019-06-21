@@ -20,6 +20,8 @@ Metadata:
           - XLReleasePassword
           - XLDASGInstanceName
           - XLRASGInstanceName
+          - XLDeployInstanceType
+          - XLReleaseInstanceType
       - Label:
           default: RDS Configuration
         Parameters:
@@ -81,6 +83,10 @@ Metadata:
         default:  S3 bucket name
       BucketKeyPrefix:
         default: S3 key prefix
+      XLDeployInstanceType:
+        default: XL Deploy instance type
+      XLReleaseInstanceType:
+        default: XL Deploy instance type
 Parameters:
   CertificateArn:
     Description: Which ACM certificate to use for the load balancer
@@ -103,13 +109,13 @@ Parameters:
     Type: String
     Default: xl-release-asg
   XLPlatformInstanceType:
+    Default: t2.medium
     AllowedValues:
-    - t2.medium
-    - m5.large
-    - m5.xlarge
+      - t2.medium
+      - c5.large
+      - m5.large
     Description: The instance type the XL DevOps Platform applications are created on
     Type: String
-    Default: t2.medium
   XLDeployPassword:
     Description: The admin password of XL Deploy
     MinLength: 8
@@ -195,6 +201,7 @@ Mappings:
       AMIID: ami-09712ab7ff3e789f8
     us-west-2: 
       AMIID: ami-0a8f619eea3ec2241
+
 Conditions:
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
 Resources:
@@ -256,7 +263,6 @@ Resources:
      Parameters:
        ASGInstanceName: !Ref XLDASGInstanceName  
        PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
-       InstanceType: !Ref XLPlatformInstanceType
        KeyPairName: !Ref KeyPairName
        XLDeployAdminPassword: !Ref XLDeployPassword
        TargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLD
@@ -267,6 +273,7 @@ Resources:
        DBPassword: !Ref DBPassword
        AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
        EfsId: !GetAtt EFSStack.Outputs.Filesystem
+       XLDeployInstanceType: !Ref XLPlatformInstanceType
   XLReleaseStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -276,7 +283,6 @@ Resources:
       Parameters:
         ASGInstanceName: !Ref XLRASGInstanceName
         PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
-        InstanceType: !Ref XLPlatformInstanceType
         KeyPairName: !Ref KeyPairName
         XLReleaseAdminPassword: !Ref XLReleasePassword
         TargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLR
@@ -290,6 +296,7 @@ Resources:
         ReportingDBUser: !Ref DBUsername
         ReportingDBPassword: !Ref DBPassword
         AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
+        XLReleaseInstanceType: !Ref XLPlatformInstanceType
   CloudWatchDashboard:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
