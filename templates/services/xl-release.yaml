@@ -379,7 +379,7 @@ Resources:
           commands:
             01_set_asg_name:
               command: sed -i "s/{{ ASG_NAME }}/$ASG_NAME/g" /var/lib/jmxtrans/jmxtrans-cloudwatch.json
-              env:	
+              env:
                 ASG_NAME: !Ref ASGInstanceName
             02_start_jmxtrans:
               command: sudo systemctl start jmxtrans
