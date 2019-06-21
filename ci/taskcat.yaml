@@ -5,7 +5,7 @@ global:
   # N.B.: If you run the tests in a different region than us-east-1,
   # add an override for CertificateArn in ~/.aws/taskcat_global_override.json
   regions:
-    - us-east-1
+    - eu-west-1
   reporting: true
 tests:
   new-vpc-e2e:
