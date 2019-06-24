@@ -80,6 +80,7 @@ Parameters:
     AllowedValues:
       - t2.medium
       - c5.large
+      - c5.xlarge
       - m5.large
     Description: The instance type the XL DevOps Platform applications are created on
     Type: String
