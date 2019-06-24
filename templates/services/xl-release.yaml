@@ -2,14 +2,14 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: |
   This template will launch 2 EC2 instances with XL Release
 Parameters:
-  InstanceType:
+  XLReleaseInstanceType:
     Description: XL Release EC2 instance type
     Type: String
-    Default: t2.medium
-    AllowedValues: [ t2.medium, t2.large, t2.xlarge, t2.2xlarge,
-                     m5.large, m5.xlarge, m5.4xlarge, m5.12xlarge,
-                     c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.18xlarge,
-                     r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.12xlarge, r5.24xlarge ]
+    AllowedValues:
+      - t2.medium
+      - c5.large
+      - c5.xlarge
+      - m5.large
     ConstraintDescription: must be a valid EC2 instance type.
   ASGInstanceName:
     Description: ASG instances name
@@ -327,10 +327,9 @@ Resources:
                 XL_CONFIG_FILE: /opt/xlr/conf/xl-release.conf
             03_xlr_startup:
               command: |
-                CHECK_DEFERRED_STARTUP=$(aws ssm get-parameters --name "$DEFERRED_SSM_PARAM" --query Parameters[0].Value --output text --region $AWS_REGION)
-                if [[ $CHECK_DEFERRED_STARTUP == 'None' ]] ; then
+                DEFERRED_SSM_PARAM=${AWS_STACK_NAME}-xlr_deferred_startup
+                if aws ssm put-parameter --name "$DEFERRED_SSM_PARAM" --value "true" --no-overwrite --type String --region $AWS_REGION ; then
                   echo "XL Release deferred startup parameter was not found. XL Release will start immediately"
-                  aws ssm put-parameter --name "$DEFERRED_SSM_PARAM" --value "true" --type String --region $AWS_REGION
                   systemctl enable xlr
                   systemctl start xlr
                 else
@@ -341,8 +340,8 @@ Resources:
                   aws ssm delete-parameter --name "$DEFERRED_SSM_PARAM" --region $AWS_REGION
                 fi
               env:
-                DEFERRED_SSM_PARAM: xlr_deferred_startup
                 AWS_REGION: !Sub ${AWS::Region}
+                AWS_STACK_NAME: !Sub ${AWS::StackName}
         health_checks:
           commands:
             01_await_healthy_service:
@@ -392,7 +391,7 @@ Resources:
       KeyName: !Ref 'KeyPairName'
       ImageId: !Ref 'AMIID'
       SecurityGroups: [!Ref 'SecurityGroup']
-      InstanceType: !Ref 'InstanceType'
+      InstanceType: !Ref 'XLReleaseInstanceType'
       IamInstanceProfile: !Ref 'XLRInstanceProfile'
       UserData:
         Fn::Base64: !Sub |
