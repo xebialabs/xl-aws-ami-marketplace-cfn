@@ -1,0 +1,85 @@
+= XL Platform Installation on AWS Marketplace
+
+== Description
+
+<marketing stuff here I guess?>
+
+== Contents
+
+This repository contains a set of AWS CloudFormation YAML templates that allows you to set up the XebiaLabs DevOps Platform on AWS. 
+
+== Step by step guide
+
+This setup supports two use cases, described below. 
+
+=== 1. New VPC Setup
+
+In this use case, the administrator should already have the following AWS resources configured in order to deploy the XL Platform:
+
+- A valid SSL certificate in Amazon Certificate Manager (ACM) in order to expose the ALB endpoints over HTTPS
+- A key pair to SSH into the instances
+
+==== All resources from the Existing VPC use-case, as well as the following additional resources, will be provisioned:
+
+- A new VPC, containing
+  * Private subnets
+  * Public subnets
+  * Data subnets
+  * Internet gateway
+  * Elastic IP addresses
+- A new Aurora PostgreSQL RDS setup, consisting of
+  * Security group allowing internal access
+  * Primary Aurora instance
+  * Optional secondary Aurora instance if Multi-AZ deployment is enabled
+- Bastion auto-scaling group, with an Elastic IP attached for HA capability
+
+The following is an example of the CloudFormation parameters -
+
+image::images/cfn-new-1.png[]
+image::images/cfn-new-2.png[]
+image::images/cfn-new-3.png[]
+
+=== 2. Existing VPC Setup
+
+In this use case, the administrator should already have the following AWS resources configured in order to deploy the XL Platform:
+
+- A VPC
+- At least two public subnets
+- At least two private subnets
+- An RDS Instance (we recommend using the PostgreSQL flavour)
+- A Bastion host(s) and associated security group
+- A valid SSL certificate in Amazon Certificate Manager (ACM) in order to expose the ALB endpoints over HTTPS
+- A key pair to SSH into the instances
+
+NOTE: The public and private subnets are responsible for traffic segregation. Never expose your databases and other non-public services on public subnets. The only resource that should be directly attached to the public subnet should be your ALB
+
+The following links are available for quick-launching some of these resources, should you not want to follow the New VPC method.
+
+|=====================================================
+| VPC with Public & Private Subnets | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
+| Aurora RDS Cluster with Security Group | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
+| Required Databases | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
+| Bastion Hosts | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
+|=====================================================
+
+==== The following resources will be provisioned:
+
+- An application load balancer (ALB) which exposes endpoints under `/xl-release` and `/xl-deploy` for the respective applications
+- Two XL Release instances in active/active mode, launched as an auto-scaling group
+- Target group for XL Release integration with the ALB
+- Two XL Deploy instances in active/passive mode, launched as an auto-scaling group
+- Target group for XL Deploy integration with the ALB
+- Three databases within the provided RDS instance
+  * `xlrelease` - The main database for XL Release
+  * `xlrarchive` - The reporting database for XL Release
+  * `xldeploy` - The main database for XL Deploy
+- A CloudWatch dashboard for general monitoring of individual nodes
+- CloudWatch alarms to monitor for inaccessible instances, as well as low memory and high CPU on the instances
+- CloudWatch log groups for log streaming from XL Release and XL Deploy
+- An EFS file system for the work area on XL Deploy
+
+The following is an example of the CloudFormation parameters -
+
+image::images/cfn-1.png[]
+image::images/cfn-2.png[]
+image::images/cfn-3.png[]
