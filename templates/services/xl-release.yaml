@@ -182,6 +182,7 @@ Resources:
                       }
                     }
                   }
+
                   metrics {
                     enabled = true
                   }
@@ -196,6 +197,11 @@ Resources:
                     db-url = "jdbc:{{ReportingDBType}}://{{ReportingDBHost}}:{{ReportingDBPort}}/xlrarchive"
                     db-username = "{{ReportingDBUser}}"
                     db-password = "{{ReportingDBPassword}}"
+                    engine {
+                      maxThreadsCount = 10
+                      location = "reports"
+                      cleanUpInterval = 6 hours
+                    }
                   }
                 }
               owner: xl
