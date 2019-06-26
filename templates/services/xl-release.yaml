@@ -338,10 +338,9 @@ Resources:
                 XL_CONFIG_FILE: /opt/xlr/conf/xl-release.conf
             03_xlr_startup:
               command: |
-                CHECK_DEFERRED_STARTUP=$(aws ssm get-parameters --name "$DEFERRED_SSM_PARAM" --query Parameters[0].Value --output text --region $AWS_REGION)
-                if [[ $CHECK_DEFERRED_STARTUP == 'None' ]] ; then
+                DEFERRED_SSM_PARAM=${AWS_STACK_NAME}-xlr_deferred_startup
+                if aws ssm put-parameter --name "$DEFERRED_SSM_PARAM" --value "true" --no-overwrite --type String --region $AWS_REGION ; then
                   echo "XL Release deferred startup parameter was not found. XL Release will start immediately"
-                  aws ssm put-parameter --name "$DEFERRED_SSM_PARAM" --value "true" --type String --region $AWS_REGION
                   systemctl enable xlr
                   systemctl start xlr
                 else
