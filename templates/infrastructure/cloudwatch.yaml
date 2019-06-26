@@ -94,7 +94,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: xl-release-asg-cpu
-      AlarmDescription: Alarm if the CPU usage is > 40% across XL Release instances
+      AlarmDescription: Alarm if the CPU usage is > 90% across XL Release instances
       Namespace: AWS/EC2
       Dimensions:
         - Name: AutoScalingGroupName
@@ -103,13 +103,13 @@ Resources:
       Period: 300
       EvaluationPeriods: 2
       MetricName: CPUUtilization
-      Threshold: 40
+      Threshold: 90
       ComparisonOperator: GreaterThanOrEqualToThreshold
   XLDCPUAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: xl-deploy-asg-cpu
-      AlarmDescription: Alarm if the CPU usage is > 40% across XL Deploy instances
+      AlarmDescription: Alarm if the CPU usage is > 45% across XL Deploy instances (only one instance is active)
       Namespace: AWS/EC2
       Dimensions:
         - Name: AutoScalingGroupName
@@ -118,14 +118,14 @@ Resources:
       Period: 300
       EvaluationPeriods: 2
       MetricName: CPUUtilization
-      Threshold: 40
+      Threshold: 45
       ComparisonOperator: GreaterThanOrEqualToThreshold
   XLRFreeMemoryPercentage:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: xl-release-free-memory
-      AlarmDescription: Alarm if the percentage of free memory drops below 20% across XL Release instances
-      Threshold: 20
+      AlarmDescription: Alarm if the percentage of free memory drops below 10% across XL Release instances
+      Threshold: 10
       ComparisonOperator: LessThanThreshold
       EvaluationPeriods: 2
       Metrics:
@@ -160,8 +160,8 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: xl-deploy-free-memory
-      AlarmDescription: Alarm if the percentage of free memory drops below 20% across XL Deploy instances
-      Threshold: 20
+      AlarmDescription: Alarm if the percentage of free memory drops below 50% across XL Deploy instances (only one instance is active)
+      Threshold: 50
       ComparisonOperator: LessThanThreshold
       EvaluationPeriods: 2
       Metrics:
