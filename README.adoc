@@ -18,30 +18,48 @@ The AMI is based on the latest Amazon Linux 2 image, which, at the time of writi
 
 The same AMI will also be used for the bastion host in the New VPC Setup use case. No products will be running or available on these instances though, as the systemd services and products themselves will be removed at startup. 
 
-== Step by step guide
+== Setup Guide
 
-This setup supports two use cases, described below. 
+This setup supports two use cases:
 
-=== 1. New VPC Setup
+1. *Full Setup:* If an administrator chooses this option, the CloudFormation stack will create all resources required to run the XL Platform. This includes a new VPC, RDS cluster, bastion hosts, auto-scaling groups and all related security groups, subnets, internet gateways and NAT gateways. 
+2. *Existing VPC & RDS Setup:* If an administrator chooses this option, the CloudFormation stack will only create the bare minimum infrastructure required to run the XL Platform. The administrator will need to provision the supporting infrastructure themselves. 
 
-In this use case, the administrator should have the following AWS resources configured in order to deploy the XL Platform:
+The exact resources provisioned, as well as an explanation of the purposes of the resources, can be found below. 
+
+=== Full Setup
+
+When opting for this setup method, the administrator only needs to have the following AWS resources configured in order to deploy the XL Platform:
 
 - A valid SSL certificate in Amazon Certificate Manager (ACM) in order to expose the ALB endpoints over HTTPS
 - A key pair to SSH into the instances
 
-==== All resources from the Existing VPC use-case, as well as the following additional resources, will be provisioned:
+==== The following resources will be provisioned:
 
 - A new VPC, containing
-  * Private subnets
-  * Public subnets
-  * Data subnets
-  * Internet gateway
-  * Elastic IP addresses
+  * Private subnets for internal (node-to-node) communication
+  * Public subnets for the ALB to communicate externally
+  * Data subnets for connectivity between the RDS cluster and the products
+  * Internet gateway so that the ASG instances have connectivity to the internet
+  * Elastic IP addresses for the bastion host
 - A new Aurora PostgreSQL RDS setup, consisting of
   * Security group allowing internal access
   * Primary Aurora instance
   * Optional secondary Aurora instance if Multi-AZ deployment is enabled
+  * Three databases within the provisioned RDS instance
+  ** `xlrelease` - The main database for XL Release
+  ** `xlrarchive` - The reporting database for XL Release
+  ** `xldeploy` - The main database for XL Deploy
 - Bastion auto-scaling group, with an Elastic IP attached for HA capability
+- An application load balancer (ALB) which exposes endpoints under `/xl-release` and `/xl-deploy` for the respective applications
+- Two XL Release instances in active/active mode, launched as an auto-scaling group
+- Target group for XL Release integration with the ALB
+- Two XL Deploy instances in active/passive mode, launched as an auto-scaling group
+- Target group for XL Deploy integration with the ALB
+- A CloudWatch dashboard for general monitoring of individual nodes
+- CloudWatch alarms to monitor for inaccessible instances, as well as low memory and high CPU on the instances
+- CloudWatch log groups for log streaming from XL Release and XL Deploy
+- An EFS file system for the work area on XL Deploy
 
 The following is an example of the CloudFormation parameters -
 
@@ -49,9 +67,12 @@ image::images/cfn-new-1.png[]
 image::images/cfn-new-2.png[]
 image::images/cfn-new-3.png[]
 
-=== 2. Existing VPC Setup
 
-In this use case, the administrator should already have the following AWS resources configured in order to deploy the XL Platform:
+NOTE: Should the administrator tear down the CloudFormation stack, the RDS instance will also be removed. A snapshot will however be created prior to the database being deleted. 
+
+=== Existing VPC & RDS Setup
+
+When opting for this setup method, the administrator should already have the following AWS resources configured in order to deploy the XL Platform:
 
 - A VPC
 - At least two public subnets
@@ -63,7 +84,7 @@ In this use case, the administrator should already have the following AWS resour
 
 NOTE: The public and private subnets are responsible for traffic segregation. Never expose your databases and other non-public services on public subnets. The only resource that should be directly attached to the public subnet should be your ALB
 
-The following links are available for quick-launching some of these resources, should you not want to follow the New VPC method.
+The following links are available for quick-launching some of these resources, should you not want to follow the Full Setup.
 
 |=====================================================
 | VPC with Public & Private Subnets | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
@@ -79,7 +100,7 @@ The following links are available for quick-launching some of these resources, s
 - Target group for XL Release integration with the ALB
 - Two XL Deploy instances in active/passive mode, launched as an auto-scaling group
 - Target group for XL Deploy integration with the ALB
-- Three databases within the provided RDS instance
+- Three databases within the provided database instance
   * `xlrelease` - The main database for XL Release
   * `xlrarchive` - The reporting database for XL Release
   * `xldeploy` - The main database for XL Deploy
@@ -94,8 +115,8 @@ image::images/cfn-1.png[]
 image::images/cfn-2.png[]
 image::images/cfn-3.png[]
 
-NOTE: Should the administrator tear down the CloudFormation stack, the RDS instance will also be removed, which will result in potential loss of data. A snapshot will however be created prior to the database being deleted. 
-
 == Post setup
 
-After the stack has been started up, the XL Release and XL Deploy endpoints will be part of the stacks outputs, as well as the public IP address of the bastion host, should the administrator have chosen the first use case (New VPC).
+After the stack has been started up, the XL Release and XL Deploy endpoints, as well as the Elastic IP address of the bastion host (should the administrator have chosen the Full Setup installation option), will be part of the stack outputs. Below is an example of the outputs:
+
+image::images/cfn-outputs-full.png[]
