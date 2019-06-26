@@ -267,7 +267,7 @@ Resources:
        DBUser: !Ref DBUsername
        DBPassword: !Ref DBPassword
        AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
-       EfsId: !GetAtt EFSStack.Outputs.Filesystem
+       EfsId: !GetAtt EFSStack.Outputs.FilesystemXLD
        XLDeployInstanceType: !Ref XLPlatformInstanceType
   XLReleaseStack:
     Type: 'AWS::CloudFormation::Stack'
@@ -292,6 +292,7 @@ Resources:
         ReportingDBPassword: !Ref DBPassword
         AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
         XLReleaseInstanceType: !Ref XLPlatformInstanceType
+        EfsId: !GetAtt EFSStack.Outputs.FilesystemXLR
   CloudWatchDashboard:
     Type: 'AWS::CloudFormation::Stack'
     Properties:

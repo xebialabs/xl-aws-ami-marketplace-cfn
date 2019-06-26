@@ -6,11 +6,16 @@ Parameters:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     Description: An environment name that will be prefixed to resource names.
     Type: String
-  EFSNameTag:
+  EFSNameTagXLD:
     MinLength: 1
-    Description: The name of the EFS volume.
+    Description: The name of the EFS volume for XL Deploy.
     Type: String
-    Default: xebialabs-EFSvolume
+    Default: xebialabs-EFS-XLD
+  EFSNameTagXLR:
+    MinLength: 1
+    Description: The name of the EFS volume for XL Release.
+    Type: String
+    Default: xebialabs-EFS-XLR
   VPCID:
     Type: AWS::EC2::VPC::Id
     Description: The VPC EFS should be deployed to
@@ -39,32 +44,60 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub ${EnvironmentName}-EFS-Hosts
-  FileSystem:
+  FileSystemXLD:
     Type: AWS::EFS::FileSystem
     Properties:
       FileSystemTags:
       - Key: Name
         Value:
-          Ref: EFSNameTag
-  MountTarget:
+          Ref: EFSNameTagXLD
+  MountTargetXLD1:
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId:
-        Ref: FileSystem
+        Ref: FileSystemXLD
       SubnetId: !Select [ 0, !Ref PrivateSubnetIDs ]
       SecurityGroups:
       - Ref: MountTargetSecurityGroup
-  MountTarget2:
+  MountTargetXLD2:
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId:
-        Ref: FileSystem
+        Ref: FileSystemXLD
       SubnetId: !Select [ 1, !Ref PrivateSubnetIDs ]
       SecurityGroups:
       - Ref: MountTargetSecurityGroup
 
+  FileSystemXLR:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      FileSystemTags:
+        - Key: Name
+          Value:
+            Ref: EFSNameTagXLR
+  MountTargetXLR1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystemXLR
+      SubnetId: !Select [ 0, !Ref PrivateSubnetIDs ]
+      SecurityGroups:
+        - Ref: MountTargetSecurityGroup
+  MountTargetXLR2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystemXLR
+      SubnetId: !Select [ 1, !Ref PrivateSubnetIDs ]
+      SecurityGroups:
+        - Ref: MountTargetSecurityGroup
+
 Outputs:
-  Filesystem:
-    Description: A reference to the EFS FileSystem
-    Value: !Ref FileSystem
+  FilesystemXLD:
+    Description: A reference to the EFS FileSystem for XL Deploy
+    Value: !Ref FileSystemXLD
+
+  FilesystemXLR:
+    Description: A reference to the EFS FileSystem for XL Release
+    Value: !Ref FileSystemXLR
 
