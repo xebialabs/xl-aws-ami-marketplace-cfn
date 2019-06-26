@@ -8,13 +8,23 @@
 
 This repository contains a set of AWS CloudFormation YAML templates that allows you to set up the XebiaLabs DevOps Platform on AWS. 
 
+== AMI Description
+
+The AMI used in this platform contains both XL Deploy and XL Release. Due to limitations on AWS' platform, this is currently the only way to distribute two products as a single listing. 
+
+On startup, userdata provides details as to which product should be launched for a given auto-scaling group. 
+
+The AMI is based on the latest Amazon Linux 2 image, which, at the time of writing this documentation, is `amzn2-ami-hvm-2.0.20190618-x86_64-gp2`. We strive to always keep the images up to date with the latest releases from AWS, in order to minimize any security attack surface. 
+
+The same AMI will also be used for the bastion host in the New VPC Setup use case. No products will be running or available on these instances though, as the systemd services and products themselves will be removed at startup. 
+
 == Step by step guide
 
 This setup supports two use cases, described below. 
 
 === 1. New VPC Setup
 
-In this use case, the administrator should already have the following AWS resources configured in order to deploy the XL Platform:
+In this use case, the administrator should have the following AWS resources configured in order to deploy the XL Platform:
 
 - A valid SSL certificate in Amazon Certificate Manager (ACM) in order to expose the ALB endpoints over HTTPS
 - A key pair to SSH into the instances
@@ -83,3 +93,9 @@ The following is an example of the CloudFormation parameters -
 image::images/cfn-1.png[]
 image::images/cfn-2.png[]
 image::images/cfn-3.png[]
+
+NOTE: Should the administrator tear down the CloudFormation stack, the RDS instance will also be removed, which will result in potential loss of data. A snapshot will however be created prior to the database being deleted. 
+
+== Post setup
+
+After the stack has been started up, the XL Release and XL Deploy endpoints will be part of the stacks outputs, as well as the public IP address of the bastion host, should the administrator have chosen the first use case (New VPC).
