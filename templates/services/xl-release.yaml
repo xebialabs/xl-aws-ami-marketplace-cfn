@@ -186,6 +186,7 @@ Resources:
                     }
                   }
                   license {
+                    product=xl-release
                     kind = ami
                     ami {
                       productCode = "{{ AWSProductCode }}"

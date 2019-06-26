@@ -155,6 +155,7 @@ Resources:
                   }
 
                   license {
+                    product=xl-deploy
                     kind = ami
                     ami {
                       productCode = "{{ AWSProductCode }}"
