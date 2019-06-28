@@ -28,30 +28,26 @@ This setup supports two use cases:
 
 The exact resources provisioned, as well as an explanation of the purposes of the resources, can be found in the table below.
 
-```
-A = Automatically created by the CloudFormation stack
-M = User needs to create this/these resource/resources manually prior to launching the CloudFormation stack
-```
 |========================================================================================================================================================================================================
-| Resource                                                                                                                                                | Full Setup  | Existing VPC & RDS Setup
+| Resource                                                                                                                                                | Full Setup    | Existing VPC & RDS Setup
 
-| Databases within https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html[RDS]                                                               | A           | A
-| https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html[Application Load Balancer]                                | A           | A
-| XL Release https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html[Auto-scaling Group]                                    | A           | A
-| XL Deploy https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html[Auto-scaling Group]                                     | A           | A
-| https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html[Target groups] for XL Deploy and XL Release     | A           | A
-| https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Dashboards.html[CloudWatch Dashboard]                                         | A           | A
-| https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html[CloudWatch Alarms]                                              | A           | A
-| https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html[CloudWatch Log Groups]                                               | A           | A
-| https://docs.aws.amazon.com/efs/latest/ug/getting-started.html[EFS] File System for XL Deploy                                                           | A           | A
-| https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html[VPC]                                                                           | A           | M
-| https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html[Private Subnets]                                                                    | A           | M
-| https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario1.html[Public Subnets]                                                                     | A           | M
-| https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html[Data Subnets]                                                                       | A           | M
-| https://docs.aws.amazon.com/vpc/latest/userguide/egress-only-internet-gateway.html[Internet Gateway]                                                    | A           | M
-| https://docs.aws.amazon.com/vpc/latest/userguide/vpc-eips.html[Elastic IP] for Bastion                                                                  | A           | M
-| https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html[RDS] Instance                                                                       | A           | M
-| Bastion https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html[Auto-scaling Group]                                       | A           | M
+| https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html[VPC]                                                                           | ✓             | 
+| https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html[Private Subnets]                                                                    | ✓             | 
+| https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario1.html[Public Subnets]                                                                     | ✓             | 
+| https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html[Data Subnets]                                                                       | ✓             | 
+| https://docs.aws.amazon.com/vpc/latest/userguide/egress-only-internet-gateway.html[Internet Gateway]                                                    | ✓             | 
+| https://docs.aws.amazon.com/vpc/latest/userguide/vpc-eips.html[Elastic IP] for Bastion                                                                  | ✓             | 
+| https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html[RDS] Instance                                                                       | ✓             | 
+| Bastion https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html[Auto-scaling Group]                                       | ✓             | 
+| Databases within https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html[RDS]                                                               | ✓             | ✓
+| https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html[Application Load Balancer]                                | ✓             | ✓
+| https://docs.aws.amazon.com/efs/latest/ug/getting-started.html[EFS] File System for XL Deploy                                                           | ✓             | ✓
+| XL Release https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html[Auto-scaling Group]                                    | ✓             | ✓
+| XL Deploy https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html[Auto-scaling Group]                                     | ✓             | ✓
+| https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html[Target groups] for XL Deploy and XL Release     | ✓             | ✓
+| https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Dashboards.html[CloudWatch Dashboard]                                         | ✓             | ✓
+| https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html[CloudWatch Alarms]                                              | ✓             | ✓
+| https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html[CloudWatch Log Groups]                                               | ✓             | ✓
 |========================================================================================================================================================================================================
 
 === Full Setup
@@ -72,26 +68,12 @@ NOTE: Should the administrator tear down the CloudFormation stack, the RDS insta
 
 === Existing VPC & RDS Setup
 
-When opting for this setup method, the administrator should already have the following AWS resources configured in order to deploy the XL Platform:
+When opting for this setup method, the administrator should already have the AWS resources as mentioned in the table above configured in order to deploy the XL Platform. In addition to these resources, the administrator will need to configure the following:
 
-- A https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html[VPC]  
-- At least two https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario1.html[Public Subnets]  
-- At least two https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html[Private Subnets]
-- An https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html[RDS] Instance (we recommend using the PostgreSQL flavour)
-- A https://docs.aws.amazon.com/quickstart/latest/linux-bastion/architecture.html#bastion-hosts[Bastion host(s)] and associated security group
 - A valid https://docs.aws.amazon.com/acm/latest/userguide/import-certificate.html[SSL/TLS certificate in Amazon Certificate Manager (ACM)] in order to expose the ALB endpoints over HTTPS
 - A https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html[key pair] to SSH into the instances
 
 NOTE: The public and private subnets are responsible for traffic segregation. Never expose your databases and other non-public services on public subnets. The only resource that should be directly attached to the public subnet should be your ALB
-
-The following links are available for quick-launching some of the required resources, should you not want to follow the Full Setup.
-
-|=====================================================
-| VPC with Public & Private Subnets | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
-| Aurora RDS Cluster with Security Group | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
-| Required Databases | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
-| Bastion Hosts | image:https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png[link=https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=XLJetPack-DB&templateURL=https://s3.amazonaws.com/xl-jetpack-aws/create-xl-jetpack-database.yaml]
-|=====================================================
 
 The following is an example of the CloudFormation parameters -
 
