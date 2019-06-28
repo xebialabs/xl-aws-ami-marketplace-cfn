@@ -27,7 +27,7 @@ This setup supports two use cases:
 The exact resources provisioned, as well as an explanation of the purposes of the resources, can be found in the table below.
 
 |========================================================================================================================================================================================================
-| Resource                                                                                                                                                | Full Setup    | Existing VPC & +++<br/>+++ RDS Setup
+| Resource                                                                                                                                                | Full Setup    | Existing VPC &+++<br/>+++RDS Setup
 
 | https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html[VPC]                                                                           | ✓             | 
 | https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html[Private Subnets]                                                                    | ✓             | 
@@ -40,6 +40,7 @@ The exact resources provisioned, as well as an explanation of the purposes of th
 | Databases within https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html[RDS]                                                               | ✓             | ✓
 | https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html[Application Load Balancer]                                | ✓             | ✓
 | https://docs.aws.amazon.com/efs/latest/ug/getting-started.html[EFS] File System for XL Deploy                                                           | ✓             | ✓
+| https://docs.aws.amazon.com/efs/latest/ug/getting-started.html[EFS] File System for XL Release                                                          | ✓             | ✓
 | XL Release https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html[Auto-scaling Group]                                    | ✓             | ✓
 | XL Deploy https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html[Auto-scaling Group]                                     | ✓             | ✓
 | https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html[Target groups] for XL Deploy and XL Release     | ✓             | ✓
