@@ -1,0 +1,264 @@
+Description: Setup cloudwatch dashboards for the XL Platform
+Parameters:
+  XLDASGInstanceName:
+    Description: The instance name of the XL Deploy Auto-scaling Group
+    Type: String
+  XLRASGInstanceName:
+    Description: The instance name of the XL Release Auto-scaling Group
+    Type: String
+Resources:
+  CloudWatchDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub 'XLPlatform-${AWS::Region}'
+      DashboardBody: !Sub |
+        {
+            "widgets": [
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 1,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"ThreadCount\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "Thread Count" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "period": 300,
+                        "title": "XL Deploy - Thread Count",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 7,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"FreePhysicalMemorySize\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "Free Memory" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "title": "XL Deploy - Free Memory",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 13,
+                    "width": 6,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"HeapMemoryUsage_max\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "Heap Max" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"HeapMemoryUsage_init\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "label": "Heap Init", "id": "e2" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"HeapMemoryUsage_committed\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "label": "Heap Committed", "id": "e3" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"HeapMemoryUsage_used\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "label": "Heap Used", "id": "e4" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "title": "XL Deploy - Heap Information",
+                        "region": "${AWS::Region}",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "text",
+                    "x": 0,
+                    "y": 0,
+                    "width": 12,
+                    "height": 1,
+                    "properties": {
+                        "markdown": "\n# XL Deploy\n"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 6,
+                    "y": 13,
+                    "width": 6,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"NonHeapMemoryUsage_max\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "None Heap Max" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"NonHeapMemoryUsage_init\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "label": "Non Heap Init", "id": "e2" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"NonHeapMemoryUsage_committed\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "label": "Non Heap Committed", "id": "e3" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"NonHeapMemoryUsage_used\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "label": "Non Heap Used", "id": "e4" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        },
+                        "title": "XL Deploy - Non-heap Information"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 19,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"AvailableProcessors\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "Available Processors" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"SystemLoadAverage\" AND AutoScalingGroup=\"${XLDASGInstanceName}\" ', 'Average', 300)", "label": "System Load", "id": "e2" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        },
+                        "title": "XL Deploy - CPU Information"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 12,
+                    "y": 1,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"ThreadCount\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "Thread Count" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "period": 300,
+                        "title": "XL Release - Thread Count",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 12,
+                    "y": 7,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"FreePhysicalMemorySize\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "Free Memory" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "title": "XL Release - Free Memory",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 12,
+                    "y": 13,
+                    "width": 6,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"HeapMemoryUsage_max\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "Heap Max" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"HeapMemoryUsage_init\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "label": "Heap Init", "id": "e2" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"HeapMemoryUsage_committed\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "label": "Heap Committed", "id": "e3" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"HeapMemoryUsage_used\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "label": "Heap Used", "id": "e4" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "title": "XL Release - Heap Information",
+                        "region": "${AWS::Region}",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "text",
+                    "x": 12,
+                    "y": 0,
+                    "width": 12,
+                    "height": 1,
+                    "properties": {
+                        "markdown": "\n# XL Release\n"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 18,
+                    "y": 13,
+                    "width": 6,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"NonHeapMemoryUsage_max\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "None Heap Max" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"NonHeapMemoryUsage_init\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "label": "Non Heap Init", "id": "e2" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"NonHeapMemoryUsage_committed\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "label": "Non Heap Committed", "id": "e3" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"NonHeapMemoryUsage_used\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "label": "Non Heap Used", "id": "e4" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        },
+                        "title": "XL Release - Non-heap Information"
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 12,
+                    "y": 19,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"AvailableProcessors\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "id": "e1", "label": "Available Processors" } ],
+                            [ { "expression": "SEARCH(' {XebiaLabs,AutoScalingGroup, InstanceId} MetricName=\"SystemLoadAverage\" AND AutoScalingGroup=\"${XLRASGInstanceName}\" ', 'Average', 300)", "label": "System Load", "id": "e2" } ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${AWS::Region}",
+                        "yAxis": {
+                            "left": {
+                                "min": 0
+                            }
+                        },
+                        "title": "XL Release - CPU Information"
+                    }
+                }
+            ]
+        }

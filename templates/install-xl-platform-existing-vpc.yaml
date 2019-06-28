@@ -18,6 +18,8 @@ Metadata:
           - XLPlatformInstanceType
           - XLDeployPassword
           - XLReleasePassword
+          - XLDASGInstanceName
+          - XLRASGInstanceName
       - Label:
           default: RDS Configuration
         Parameters:
@@ -57,6 +59,10 @@ Metadata:
         default: XL Deploy administrator password
       XLReleasePassword:
         default: XL Release administrator password
+      XLDASGInstanceName:
+        default: XL Deploy Auto-scaling Group name
+      XLRASGInstanceName:
+        default: XL Release Auto-scaling Group name
       RDSSecurityGroupID:
         default: RDS Security Group ID
       DBHost:
@@ -88,14 +94,23 @@ Parameters:
   PrivateSubnetIDs:
     Description: The private subnet XL should be deployed to
     Type: List<AWS::EC2::Subnet::Id>
+  XLDASGInstanceName:
+    Description: ASG instances name
+    Type: String
+    Default: xl-deploy-asg
+  XLRASGInstanceName:
+    Description: ASG instances name
+    Type: String
+    Default: xl-release-asg
   XLPlatformInstanceType:
+    Default: t2.medium
     AllowedValues:
-    - t2.medium
-    - m5.large
-    - m5.xlarge
+      - t2.medium
+      - c5.large
+      - c5.xlarge
+      - m5.large
     Description: The instance type the XL DevOps Platform applications are created on
     Type: String
-    Default: t2.medium
   XLDeployPassword:
     Description: The admin password of XL Deploy
     MinLength: 8
@@ -164,23 +179,23 @@ Parameters:
 Mappings:
   AWSRegionAMI:
     eu-central-1:
-      AMIID: ami-0b2ec840820a78183
+      AMIID: ami-070359d40a8f0ffd8
     eu-north-1:
-      AMIID: ami-0d6130172efcd8bd9
+      AMIID: ami-08f7aa21d5837f922
     eu-west-1:
-      AMIID: ami-0cf1831f0440f9f32
+      AMIID: ami-0d66a4c605b3c76a7
     eu-west-2:
-      AMIID: ami-02c292c9cb7d65e7f
+      AMIID: ami-0cb44309c64d5a05c
     eu-west-3:
-      AMIID: ami-052de4cb6e6792221
+      AMIID: ami-06617e784f575dffe
     us-east-1:
-      AMIID: ami-02f60c173e0f0f793
+      AMIID: ami-04a3acf50d5fffbd0
     us-east-2:
-      AMIID: ami-08585669e41eca615
+      AMIID: ami-09e13b5563106d638
     us-west-1:
-      AMIID: ami-0c3cc895c65c821de
+      AMIID: ami-04775d7d1d2b2ab42
     us-west-2:
-      AMIID: ami-0444720c6416f7e06
+      AMIID: ami-042e18a23f9285652
 
 Conditions:
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
@@ -241,8 +256,8 @@ Resources:
      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/services/xl-deploy.yaml
      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
      Parameters:
+       ASGInstanceName: !Ref XLDASGInstanceName
        PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
-       InstanceType: !Ref XLPlatformInstanceType
        KeyPairName: !Ref KeyPairName
        XLDeployAdminPassword: !Ref XLDeployPassword
        TargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLD
@@ -252,7 +267,8 @@ Resources:
        DBUser: !Ref DBUsername
        DBPassword: !Ref DBPassword
        AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
-       EfsId: !GetAtt EFSStack.Outputs.Filesystem
+       EfsId: !GetAtt EFSStack.Outputs.FilesystemXLD
+       XLDeployInstanceType: !Ref XLPlatformInstanceType
        # TO BE CHANGED WITH REAL PRODUCT CODE
        AWSProductCode: TODO-123456789
   XLReleaseStack:
@@ -262,8 +278,8 @@ Resources:
       - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/services/xl-release.yaml
       - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
+        ASGInstanceName: !Ref XLRASGInstanceName
         PrivateSubnetIDs: !Join [ ",", !Ref PrivateSubnetIDs ]
-        InstanceType: !Ref XLPlatformInstanceType
         KeyPairName: !Ref KeyPairName
         XLReleaseAdminPassword: !Ref XLReleasePassword
         TargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLR
@@ -277,8 +293,33 @@ Resources:
         ReportingDBUser: !Ref DBUsername
         ReportingDBPassword: !Ref DBPassword
         AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
+        XLReleaseInstanceType: !Ref XLPlatformInstanceType
+        EfsId: !GetAtt EFSStack.Outputs.FilesystemXLR
         # TO BE CHANGED WITH REAL PRODUCT CODE
         AWSProductCode: TODO-123456789
+  CloudWatchDashboard:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub
+      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/cw-dashboard.yaml
+      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        XLDASGInstanceName: !Ref XLDASGInstanceName
+        XLRASGInstanceName: !Ref XLRASGInstanceName
+  MonitoringStack:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub
+      - https://${BucketName}.${S3Region}.amazonaws.com/${BucketKeyPrefix}templates/infrastructure/cloudwatch.yaml
+      - { S3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        LoadBalancerARN: !GetAtt LoadBalancerStack.Outputs.LoadBalancerARN
+        XLDTargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLD
+        XLDASGName: !GetAtt XLDeployStack.Outputs.XLDASGName
+        XLDASGInstanceName: !Ref XLDASGInstanceName
+        XLRASGInstanceName: !Ref XLRASGInstanceName
+        XLRTargetGroupARN: !GetAtt LoadBalancerStack.Outputs.TargetGroupXLR
+        XLRASGName: !GetAtt XLReleaseStack.Outputs.XLRASGName
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable

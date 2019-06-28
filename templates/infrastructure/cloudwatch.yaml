@@ -1,0 +1,194 @@
+Description: This template deploys various alarms related to the XL platform's operation
+Parameters:
+  LoadBalancerARN:
+    Type: String
+    Description: The ARN for the primary ALB
+  XLDTargetGroupARN:
+    Type: String
+    Description: The ARN for the target group that the XLD instances are associated with
+  XLDASGName:
+    Type: String
+    Description: The Name for the Auto-scaling Group associated with the XLD instances
+  XLDASGInstanceName:
+    Type: String
+    Description: Human-readable name for the Auto-scaling Group associated with the XL Deploy instances
+  XLRTargetGroupARN:
+    Type: String
+    Description: The ARN for the target group that the XLR instances are associated with
+  XLRASGName:
+    Type: String
+    Description: The Name for the Auto-scaling Group associated with the XLR instances
+  XLRASGInstanceName:
+    Type: String
+    Description: Human-readable name for the Auto-scaling Group associated with the XL Release instances
+Resources:
+  XLRUnhealthyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: xl-release-instances-healthy
+      AlarmDescription: Checks ALB health check metrics to make sure all XL Release nodes are healthy
+      Namespace: AWS/ApplicationELB
+      Dimensions:
+        - Name: TargetGroup
+          Value: !Select
+            - 5
+            - Fn::Split: 
+                - ':'
+                - !Ref 'XLRTargetGroupARN'
+        - Name: LoadBalancer
+          Value: !Join
+            - ''
+            - - app/
+              - Fn::Select:
+                - 2
+                - Fn::Split:
+                  - '/'
+                  - !Ref LoadBalancerARN
+              - '/'
+              - Fn::Select:
+                - 3
+                - Fn::Split:
+                  - '/'
+                  - !Ref LoadBalancerARN
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      MetricName: UnHealthyHostCount
+      ComparisonOperator: GreaterThanThreshold
+  XLDUnhealthyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: xl-deploy-instances-healthy
+      AlarmDescription: Checks ALB health check metrics to make sure all XL Deploy nodes are healthy
+      Namespace: AWS/ApplicationELB
+      Dimensions:
+        - Name: TargetGroup
+          Value: !Select
+            - 5
+            - Fn::Split: 
+                - ':'
+                - !Ref 'XLDTargetGroupARN'
+        - Name: LoadBalancer
+          Value: !Join
+            - ''
+            - - app/
+              - Fn::Select:
+                - 2
+                - Fn::Split:
+                  - '/'
+                  - !Ref LoadBalancerARN
+              - '/'
+              - Fn::Select:
+                - 3
+                - Fn::Split:
+                  - '/'
+                  - !Ref LoadBalancerARN
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1 # Because we're running in active/passive mode
+      MetricName: UnHealthyHostCount
+      ComparisonOperator: GreaterThanThreshold
+  XLRCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: xl-release-asg-cpu
+      AlarmDescription: Alarm if the CPU usage is > 90% across XL Release instances
+      Namespace: AWS/EC2
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref XLRASGName
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      MetricName: CPUUtilization
+      Threshold: 90
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  XLDCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: xl-deploy-asg-cpu
+      AlarmDescription: Alarm if the CPU usage is > 45% across XL Deploy instances (only one instance is active)
+      Namespace: AWS/EC2
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref XLDASGName
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      MetricName: CPUUtilization
+      Threshold: 45
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  XLRFreeMemoryPercentage:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: xl-release-free-memory
+      AlarmDescription: Alarm if the percentage of free memory drops below 10% across XL Release instances
+      Threshold: 10
+      ComparisonOperator: LessThanThreshold
+      EvaluationPeriods: 2
+      Metrics:
+        - Id: free_memory
+          Label: Total free memory
+          ReturnData: false
+          MetricStat: 
+            Stat: Average
+            Period: 60
+            Metric:
+              MetricName: FreePhysicalMemorySize
+              Namespace: XebiaLabs
+              Dimensions: 
+                - Name: AutoScalingGroup
+                  Value: !Ref XLRASGInstanceName
+        - Id: total_memory
+          Label: Total memory
+          ReturnData: false
+          MetricStat: 
+            Stat: Average
+            Period: 60
+            Metric:
+              MetricName: TotalPhysicalMemorySize
+              Namespace: XebiaLabs
+              Dimensions: 
+                - Name: AutoScalingGroup
+                  Value: !Ref XLRASGInstanceName
+        - Id: free_memory_percentage
+          Label: Percentage of memory still available across the cluster
+          Expression: (free_memory / total_memory) * 100
+  XLDFreeMemoryPercentage:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: xl-deploy-free-memory
+      AlarmDescription: Alarm if the percentage of free memory drops below 50% across XL Deploy instances (only one instance is active)
+      Threshold: 50
+      ComparisonOperator: LessThanThreshold
+      EvaluationPeriods: 2
+      Metrics:
+        - Id: free_memory
+          Label: Total free memory
+          ReturnData: false
+          MetricStat: 
+            Stat: Average
+            Period: 60
+            Metric:
+              MetricName: FreePhysicalMemorySize
+              Namespace: XebiaLabs
+              Dimensions: 
+                - Name: AutoScalingGroup
+                  Value: !Ref XLDASGInstanceName
+        - Id: total_memory
+          Label: Total memory
+          ReturnData: false
+          MetricStat: 
+            Stat: Average
+            Period: 60
+            Metric:
+              MetricName: TotalPhysicalMemorySize
+              Namespace: XebiaLabs
+              Dimensions: 
+                - Name: AutoScalingGroup
+                  Value: !Ref XLDASGInstanceName
+        - Id: free_memory_percentage
+          Label: Percentage of memory still available across the cluster
+          Expression: (free_memory / total_memory) * 100

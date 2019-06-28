@@ -2,14 +2,14 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: |
   This template will launch 2 EC2 instances with XL Release
 Parameters:
-  InstanceType:
+  XLReleaseInstanceType:
     Description: XL Release EC2 instance type
     Type: String
-    Default: t2.medium
-    AllowedValues: [ t2.medium, t2.large, t2.xlarge, t2.2xlarge,
-                     m5.large, m5.xlarge, m5.4xlarge, m5.12xlarge,
-                     c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.18xlarge,
-                     r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.12xlarge, r5.24xlarge ]
+    AllowedValues:
+      - t2.medium
+      - c5.large
+      - c5.xlarge
+      - m5.large
     ConstraintDescription: must be a valid EC2 instance type.
   ASGInstanceName:
     Description: ASG instances name
@@ -58,6 +58,11 @@ Parameters:
     Type: String
     Default: 'org.postgresql.Driver'
     AllowedValues: [ 'org.postgresql.Driver', 'com.microsoft.sqlserver.jdbc.SQLServerDriver', 'com.mysql.cj.jdbc.Driver' ]
+  EfsId:
+    Description: The ID of the EFS filesystem within the selected VPC
+    Type: String
+    AllowedPattern: ^fs\-\w{8,}$
+    ConstraintDescription: Must be a valid EFS identifier
   ReportingDBUser:
     Description: The reporting DB username
     Type: String
@@ -185,6 +190,7 @@ Resources:
                       }
                     }
                   }
+
                   license {
                     product=xl-release
                     kind = ami
@@ -206,6 +212,11 @@ Resources:
                     db-url = "jdbc:{{ReportingDBType}}://{{ReportingDBHost}}:{{ReportingDBPort}}/xlrarchive"
                     db-username = "{{ReportingDBUser}}"
                     db-password = "{{ReportingDBPassword}}"
+                    engine {
+                      maxThreadsCount = 10
+                      location = "reports"
+                      cleanUpInterval = 6 hours
+                    }
                   }
                 }
               owner: xl
@@ -331,12 +342,22 @@ Resources:
               command: rm -Rf /opt/xld /etc/systemd/system/xld.service
             01_configure_wrapper_memory:
               command: export MEMORY=`free -m | head -n 2 | tail -n 1 | awk '{print $7}'`; sed -i "s/\[\[ MEM_SIZE \]\]/$MEMORY/" /opt/xlr/conf/xlr-wrapper-linux.conf
-            02_get_ip_for_cluster:
+            02_configure_efs_mount:
+              command: |
+                mkdir -p $EFS_MOUNT_POINT
+                echo "$EFS_ID:/ $EFS_MOUNT_POINT efs tls,_netdev" >> /etc/fstab
+                mount -a -t efs defaults
+
+                chown -R xl:xl $EFS_MOUNT_POINT
+              env:
+                EFS_ID: !Ref EfsId
+                EFS_MOUNT_POINT: /opt/xlr/reports
+            03_get_ip_for_cluster:
               command: |
                 export IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4); sed -i "s/HOSTNAME/$IP/g" $XL_CONFIG_FILE
               env:
                 XL_CONFIG_FILE: /opt/xlr/conf/xl-release.conf
-            03_xlr_startup:
+            04_xlr_startup:
               command: |
                 DEFERRED_SSM_PARAM=${AWS_STACK_NAME}-xlr_deferred_startup
                 if aws ssm put-parameter --name "$DEFERRED_SSM_PARAM" --value "true" --no-overwrite --type String --region $AWS_REGION ; then
@@ -351,8 +372,8 @@ Resources:
                   aws ssm delete-parameter --name "$DEFERRED_SSM_PARAM" --region $AWS_REGION
                 fi
               env:
-                DEFERRED_SSM_PARAM: xlr_deferred_startup
                 AWS_REGION: !Sub ${AWS::Region}
+                AWS_STACK_NAME: !Sub ${AWS::StackName}
         health_checks:
           commands:
             01_await_healthy_service:
@@ -387,10 +408,12 @@ Resources:
                 REGION: !Sub ${AWS::Region}
         jmxtrans:
           commands:
-            01_create_jmxtrans_pid_folder:
-              command: sudo mkdir /var/run/jmxtrans && sudo chown jmxtrans:jmxtrans /var/run/jmxtrans
+            01_set_asg_name:
+              command: sed -i "s/{{ ASG_NAME }}/$ASG_NAME/g" /var/lib/jmxtrans/jmxtrans-cloudwatch.json
+              env:
+                ASG_NAME: !Ref ASGInstanceName
             02_start_jmxtrans:
-              command: sudo /usr/share/jmxtrans/bin/jmxtrans start
+              command: sudo systemctl start jmxtrans
         configSets:
           configuration:
             - 'template'
@@ -400,7 +423,7 @@ Resources:
       KeyName: !Ref 'KeyPairName'
       ImageId: !Ref 'AMIID'
       SecurityGroups: [!Ref 'SecurityGroup']
-      InstanceType: !Ref 'InstanceType'
+      InstanceType: !Ref 'XLReleaseInstanceType'
       IamInstanceProfile: !Ref 'XLRInstanceProfile'
       UserData:
         Fn::Base64: !Sub |
@@ -442,4 +465,7 @@ Resources:
       Roles:
         - !Ref "XLReleaseRole"
 
-# Outputs:
+Outputs:
+  XLRASGName:
+    Description: The name of the XL Release Auto-scaling Group
+    Value: !Ref XLReleaseGroup

@@ -17,6 +17,8 @@ Metadata:
           - XLPlatformInstanceType
           - XLDeployPassword
           - XLReleasePassword
+          - XLDASGInstanceName
+          - XLRASGInstanceName
       - Label:
           default: RDS Configuration
         Parameters:
@@ -46,6 +48,10 @@ Metadata:
         default: XL instance type
       KeyPairName:
         default: KeyPair name for XebiaLabs software
+      XLDASGInstanceName:
+        default: Auto-scaling group name for XL Deploy
+      XLRASGInstanceName:
+        default: Auto-scaling group name for XL Release
       XLDeployPassword:
         default: XL Deploy administrator password
       XLReleasePassword:
@@ -73,8 +79,9 @@ Parameters:
   XLPlatformInstanceType:
     AllowedValues:
       - t2.medium
+      - c5.large
+      - c5.xlarge
       - m5.large
-      - m5.xlarge
     Description: The instance type the XL DevOps Platform applications are created on
     Type: String
     Default: t2.medium
@@ -168,6 +175,20 @@ Parameters:
     Description: "Ip range off your home network from where you can access the bastion hosts"
     Type: String
     Default: '0.0.0.0/0'
+  XLRASGInstanceName:
+    Description: Auto-scaling group name for XL Release
+    Type: String
+    Default: xl-release-asg
+  XLDASGInstanceName:
+    Description: Auto-scaling group name for XL Deploy
+    Type: String
+    Default: xl-deploy-asg
+  BastionInstanceType:
+    AllowedValues:
+      - t2.micro
+    Default: t2.micro
+    Description: Amazon EC2 instance type for the bastion instances
+    Type: String
 
 Conditions:
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
@@ -175,23 +196,23 @@ Conditions:
 Mappings:
   AWSRegionAMI:
     eu-central-1:
-      AMIID: ami-0b2ec840820a78183
+      AMIID: ami-070359d40a8f0ffd8
     eu-north-1:
-      AMIID: ami-0d6130172efcd8bd9
+      AMIID: ami-08f7aa21d5837f922
     eu-west-1:
-      AMIID: ami-0cf1831f0440f9f32
+      AMIID: ami-0d66a4c605b3c76a7
     eu-west-2:
-      AMIID: ami-02c292c9cb7d65e7f
+      AMIID: ami-0cb44309c64d5a05c
     eu-west-3:
-      AMIID: ami-052de4cb6e6792221
+      AMIID: ami-06617e784f575dffe
     us-east-1:
-      AMIID: ami-02f60c173e0f0f793
+      AMIID: ami-04a3acf50d5fffbd0
     us-east-2:
-      AMIID: ami-08585669e41eca615
+      AMIID: ami-09e13b5563106d638
     us-west-1:
-      AMIID: ami-0c3cc895c65c821de
+      AMIID: ami-04775d7d1d2b2ab42
     us-west-2:
-      AMIID: ami-0444720c6416f7e06
+      AMIID: ami-042e18a23f9285652
 
 Resources:
   VPCStack:
@@ -215,6 +236,7 @@ Resources:
         KeyPairName: !Ref KeyPairName
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
+        BastionInstanceType: !Ref BastionInstanceType
   RDSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -242,6 +264,8 @@ Resources:
         PublicSubnetIDs: !GetAtt VPCStack.Outputs.PublicSubnetIDs
         PrivateSubnetIDs: !GetAtt VPCStack.Outputs.PrivateSubnetIDs
         XLPlatformInstanceType: !Ref XLPlatformInstanceType
+        XLRASGInstanceName: !Ref XLRASGInstanceName
+        XLDASGInstanceName: !Ref XLDASGInstanceName
         XLDeployPassword: !Ref XLDeployPassword
         XLReleasePassword: !Ref XLReleasePassword
         RDSSecurityGroupID: !GetAtt RDSStack.Outputs.AuroraRDSSecurityGroupID
