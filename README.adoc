@@ -3,8 +3,6 @@
 
 == Description
 
-<marketing stuff here I guess?>
-
 == Contents
 
 This repository contains a set of AWS CloudFormation YAML templates that allows you to set up the XebiaLabs DevOps Platform on AWS. 
