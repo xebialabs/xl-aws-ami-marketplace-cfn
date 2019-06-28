@@ -89,6 +89,9 @@ Parameters:
   AMIID:
     Description: The AMI ID used to for XL DevoPS Platform
     Type: AWS::EC2::Image::Id
+  AWSProductCode:
+    Description: The AWS AMI Marketplace Listing Product Code
+    Type: String
 
 Mappings:
   DBType:
@@ -188,6 +191,13 @@ Resources:
                     }
                   }
 
+                  license {
+                    product=xl-release
+                    kind = ami
+                    ami {
+                      productCode = "{{ AWSProductCode }}"
+                    }
+                  }
                   metrics {
                     enabled = true
                   }
@@ -212,6 +222,7 @@ Resources:
               owner: xl
               group: xl
               context:
+                AWSProductCode: !Ref AWSProductCode
                 DBUser: !Ref 'DBUser'
                 DBPassword: !Ref 'DBPassword'
                 DBHost: !Ref 'DBHost'
@@ -256,7 +267,7 @@ Resources:
                       <createLogGroup>true</createLogGroup>
                       <queueLength>100</queueLength>
                       <groupName>{{LogGroup}}</groupName>
-                      <streamName>XLRelease-${HOSTNAME:-default}</streamName> 
+                      <streamName>XLRelease-${HOSTNAME:-default}</streamName>
                       <layout>
                           <pattern>[%X{a} %X{b}] %-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
                       </layout>
@@ -456,5 +467,5 @@ Resources:
 
 Outputs:
   XLRASGName:
-    Description: The name of the XL Release Auto-scaling Group 
+    Description: The name of the XL Release Auto-scaling Group
     Value: !Ref XLReleaseGroup

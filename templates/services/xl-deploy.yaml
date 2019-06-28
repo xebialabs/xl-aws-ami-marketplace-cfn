@@ -69,6 +69,9 @@ Parameters:
   AMIID:
     Description: The AMI ID used to for XL DevoPS Platform
     Type: AWS::EC2::Image::Id
+  AWSProductCode:
+    Description: The AWS AMI Marketplace Listing Product Code
+    Type: String
 #  SslCertificateArn:
 #    Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs  instances
 #    Type: String
@@ -151,6 +154,14 @@ Resources:
                     enabled = false
                   }
 
+                  license {
+                    product=xl-deploy
+                    kind = ami
+                    ami {
+                      productCode = "{{ AWSProductCode }}"
+                    }
+                  }
+
                   cluster {
                     # mode: "default", "hot-standby", "full"
                     mode = hot-standby
@@ -204,6 +215,7 @@ Resources:
 
                 }
               context:
+                AWSProductCode: !Ref 'AWSProductCode'
                 DBUser: !Ref 'DBUser'
                 DBPassword: !Ref 'DBPassword'
                 DBHost: !Ref 'DBHost'
@@ -293,7 +305,7 @@ Resources:
               group: xl
               context:
                 LogGroup: !Ref LogGroup
-          commands: 
+          commands:
             00_remove_xlr:
               command: rm -Rf /opt/xlr /etc/systemd/system/xlr.service
             01_configure_wrapper_memory:

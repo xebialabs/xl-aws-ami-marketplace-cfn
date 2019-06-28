@@ -4,6 +4,7 @@
 account.json
 **/temp/**
 taskcat_outputs/
+ci/taskcat-dev.yaml
 
 ######################
 # Node

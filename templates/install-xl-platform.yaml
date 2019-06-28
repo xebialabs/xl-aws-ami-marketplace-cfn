@@ -196,23 +196,23 @@ Conditions:
 Mappings:
   AWSRegionAMI:
     eu-central-1:
-      AMIID: ami-070359d40a8f0ffd8
+      AMIID: ami-0d474a9df1f1f7a51
     eu-north-1:
-      AMIID: ami-08f7aa21d5837f922
+      AMIID: ami-0cfe325c7e63d74d7
     eu-west-1:
-      AMIID: ami-0d66a4c605b3c76a7
+      AMIID: ami-016efc83a75038991
     eu-west-2:
-      AMIID: ami-0cb44309c64d5a05c
+      AMIID: ami-02f504e8a97a6b7e9
     eu-west-3:
-      AMIID: ami-06617e784f575dffe
+      AMIID: ami-04dc46236d6216b85
     us-east-1:
-      AMIID: ami-04a3acf50d5fffbd0
+      AMIID: ami-00d1d67f95a8cd2aa
     us-east-2:
-      AMIID: ami-09e13b5563106d638
+      AMIID: ami-0800eab6d027a79a1
     us-west-1:
-      AMIID: ami-04775d7d1d2b2ab42
+      AMIID: ami-0e09bcbd79f28d49f
     us-west-2:
-      AMIID: ami-042e18a23f9285652
+      AMIID: ami-032a5a2e76d197150
 
 Resources:
   VPCStack:
