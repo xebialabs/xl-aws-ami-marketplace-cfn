@@ -74,11 +74,11 @@ NOTE: Should the administrator tear down the CloudFormation stack, the RDS insta
 
 When opting for this setup method, the administrator should already have the following AWS resources configured in order to deploy the XL Platform:
 
-- A VPC
-- At least two public subnets
-- At least two private subnets
-- An RDS Instance (we recommend using the PostgreSQL flavour)
-- A Bastion host(s) and associated security group
+- A https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html[VPC]  
+- At least two https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario1.html[Public Subnets]  
+- At least two https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html[Private Subnets]
+- An https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html[RDS] Instance (we recommend using the PostgreSQL flavour)
+- A https://docs.aws.amazon.com/quickstart/latest/linux-bastion/architecture.html#bastion-hosts[Bastion host(s)] and associated security group
 - A valid https://docs.aws.amazon.com/acm/latest/userguide/import-certificate.html[SSL/TLS certificate in Amazon Certificate Manager (ACM)] in order to expose the ALB endpoints over HTTPS
 - A https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html[key pair] to SSH into the instances
 
@@ -101,6 +101,6 @@ image::images/cfn-3.png[]
 
 == Post setup
 
-After the stack has been started up, the XL Release and XL Deploy endpoints, as well as the Elastic IP address of the bastion host (should the administrator have chosen the Full Setup installation option), will be part of the stack outputs. Below is an example of the outputs:
+After the stack has been started up, the XL Release and XL Deploy endpoints, as well as the Elastic IP address of the bastion host (should the administrator have chosen the Full Setup installation option), will be part of the stack outputs. To find these, go to the https://us-west-1.console.aws.amazon.com/cloudformation/home?region=us-west-1[CloudFormation Console] in your chosen region, select the main/master stack and then click on "Outputs". Below is an example of the outputs:
 
 image::images/cfn-outputs-full.png[]
