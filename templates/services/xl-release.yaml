@@ -58,6 +58,11 @@ Parameters:
     Type: String
     Default: 'org.postgresql.Driver'
     AllowedValues: [ 'org.postgresql.Driver', 'com.microsoft.sqlserver.jdbc.SQLServerDriver', 'com.mysql.cj.jdbc.Driver' ]
+  EfsId:
+    Description: The ID of the EFS filesystem within the selected VPC
+    Type: String
+    AllowedPattern: ^fs\-\w{8,}$
+    ConstraintDescription: Must be a valid EFS identifier
   ReportingDBUser:
     Description: The reporting DB username
     Type: String
@@ -182,6 +187,7 @@ Resources:
                       }
                     }
                   }
+
                   metrics {
                     enabled = true
                   }
@@ -196,6 +202,11 @@ Resources:
                     db-url = "jdbc:{{ReportingDBType}}://{{ReportingDBHost}}:{{ReportingDBPort}}/xlrarchive"
                     db-username = "{{ReportingDBUser}}"
                     db-password = "{{ReportingDBPassword}}"
+                    engine {
+                      maxThreadsCount = 10
+                      location = "reports"
+                      cleanUpInterval = 6 hours
+                    }
                   }
                 }
               owner: xl
@@ -320,12 +331,22 @@ Resources:
               command: rm -Rf /opt/xld /etc/systemd/system/xld.service
             01_configure_wrapper_memory:
               command: export MEMORY=`free -m | head -n 2 | tail -n 1 | awk '{print $7}'`; sed -i "s/\[\[ MEM_SIZE \]\]/$MEMORY/" /opt/xlr/conf/xlr-wrapper-linux.conf
-            02_get_ip_for_cluster:
+            02_configure_efs_mount:
+              command: |
+                mkdir -p $EFS_MOUNT_POINT
+                echo "$EFS_ID:/ $EFS_MOUNT_POINT efs tls,_netdev" >> /etc/fstab
+                mount -a -t efs defaults
+
+                chown -R xl:xl $EFS_MOUNT_POINT
+              env:
+                EFS_ID: !Ref EfsId
+                EFS_MOUNT_POINT: /opt/xlr/reports
+            03_get_ip_for_cluster:
               command: |
                 export IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4); sed -i "s/HOSTNAME/$IP/g" $XL_CONFIG_FILE
               env:
                 XL_CONFIG_FILE: /opt/xlr/conf/xl-release.conf
-            03_xlr_startup:
+            04_xlr_startup:
               command: |
                 DEFERRED_SSM_PARAM=${AWS_STACK_NAME}-xlr_deferred_startup
                 if aws ssm put-parameter --name "$DEFERRED_SSM_PARAM" --value "true" --no-overwrite --type String --region $AWS_REGION ; then
