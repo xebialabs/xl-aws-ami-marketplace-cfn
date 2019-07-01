@@ -18,3 +18,31 @@ If an error occurred while running TaskCat, or you added the `-n` option, TaskCa
 ``` 
 for i in `aws s3 ls | grep taskcat | awk '{print $3}'`; do aws s3 rb s3://$i --force; done
 ```
+
+== Licensing
+
+The AWS Marketplace licenses are automatically generated when a valid SKU is configured. This SKU is referred to as the `AWSProductCode` in the CFN stack parameters. The following configuration is present on both XL Release and XL Deploy: 
+
+```
+license {
+  product = xl-release
+  kind = ami
+  ami {
+    productCode = "{{ AWSProductCode }}"
+  }
+}
+```
+
+and 
+
+```
+license {
+  product = xl-deploy
+  kind = ami
+  ami {
+    productCode = "{{ AWSProductCode }}"
+  }
+}
+```
+
+On startup, the instances send the SKU, along with metadata retrieved from the instance itself, to the licensing server in order to retrieve a valid license. The SKU is provided by AWS as part of the Marketplace listing. 
