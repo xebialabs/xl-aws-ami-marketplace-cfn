@@ -82,7 +82,7 @@ Parameters:
     Type: String
     Default: 'org.postgresql.Driver'
     AllowedValues: [ 'org.postgresql.Driver', 'com.microsoft.sqlserver.jdbc.SQLServerDriver', 'com.mysql.cj.jdbc.Driver' ]
-  LogGroup:
+  LogGroupName:
     Description: The CloudWatch log group for XL Release
     Type: String
     Default: /aws/ec2/xlr
@@ -264,7 +264,7 @@ Resources:
                   </appender>
 
                   <appender name="CLOUDWATCH" class="io.github.dibog.AwsLogAppender">
-                      <createLogGroup>true</createLogGroup>
+                      <createLogGroup>false</createLogGroup>
                       <queueLength>100</queueLength>
                       <groupName>{{LogGroup}}</groupName>
                       <streamName>XLRelease-${HOSTNAME:-default}</streamName>
@@ -336,7 +336,7 @@ Resources:
               owner: xl
               group: xl
               context:
-                LogGroup: !Ref LogGroup
+                LogGroup: !Ref xlrLogGroup
           commands:
             00_remove_xld:
               command: rm -Rf /opt/xld /etc/systemd/system/xld.service
@@ -431,6 +431,10 @@ Resources:
           yum update -y aws-cfn-bootstrap
 
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region} --configsets configuration
+  xlrLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Ref LogGroupName
   XLReleaseRole:
     Type: AWS::IAM::Role
     Properties:
@@ -451,7 +455,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: "logs:*"
-                Resource: "arn:aws:logs:*:*:*"
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:*:log-group:${xlrLogGroup}:*'
               - Effect: Allow
                 Action: "ssm:*"
                 Resource: "arn:aws:ssm:*:*:*"
