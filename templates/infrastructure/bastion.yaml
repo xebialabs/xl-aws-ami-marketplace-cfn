@@ -28,6 +28,10 @@ Metadata:
       PublicSubnetIDs:
         default: Public Subnets IDs
 Parameters:
+  EnvironmentName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Description: An environment name that will be prefixed to resource names.
+    Type: String
   BastionTenancy:
     Description: 'VPC Tenancy to launch the bastion in. Options: ''dedicated'' or ''default'''
     Type: String
@@ -79,6 +83,9 @@ Resources:
           ToPort: 22
           CidrIp:
             Ref: RemoteAccessCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-BastionHosts
   BastionMainLogGroup:
     Type: AWS::Logs::LogGroup
   BastionHostRole:
