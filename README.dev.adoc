@@ -7,9 +7,35 @@ This documentation is not meant for end-user consumption, but rather for interna
 Follow these steps to execute tests using AWS TaskCat. 
 
 1. https://aws-quickstart.github.io/install-taskcat.html[Install taskcat]. The included `pipenv` file can be used to do this if you'd like to keep your global context clean. 
-2. Modify `ci/new-vpc-e2e.json` and parameters that fits you (you can also use you local `~/.aws/taskcat_global_override.json` to override parameters like `KeyPairName`)
-3. Modify `ci/taskcat.yaml` so it can work your your aws account. For example the region has to be the same as the region in your `~/.aws/config`
-4. Now we can run `taskcat -c ci/taskcat.yaml`. If you'd like to keep the stack running after the tests have passed *or* failed, run `taskcat -n -c ci/taskcat.yaml`. 
+2. Create a file called `~/.aws/taskcat_global_override.json` and add override parameters like `KeyPairName`. An example of this override file looks like the following: 
++
+```
+[
+  {
+    "ParameterKey": "KeyPairName",
+    "ParameterValue": "tbezuidenhout-us-west-1"
+  },
+  {
+    "ParameterKey": "CertificateArn",
+    "ParameterValue": "arn:aws:acm:us-west-1:1324123123123123:certificate/56bf4b0a-1d80-1234-1234-fawe341wfasdf"
+  },
+  {
+    "ParameterKey": "XLReleasePassword",
+    "ParameterValue": "Welcome2XebiaLabs"
+  },
+  {
+    "ParameterKey": "XLDeployPassword",
+    "ParameterValue": "Welcome2XebiaLabs"
+  },
+  {
+    "ParameterKey": "DBMasterPassword",
+    "ParameterValue": "Welcome2XebiaLabs"
+  }
+]
+```
++
+3. Copy `ci/taskcat.yaml` to `ci/taskcat-dev.yaml` and modify so it can work with your AWS account. For example, the region has to be the same as the region in your `~/.aws/config`. This file is included in the `.gitignore` file and thus won't be tracked by git.
+4. Now we can run `taskcat -c ci/taskcat-dev.yaml`. If you'd like to keep the stack running, regardless of whether the tests have passed *or* failed, run `taskcat -n -c ci/taskcat-dev.yaml`. 
 
 == Cleanup S3 buckets from TaskCat runs
 
@@ -19,9 +45,11 @@ If an error occurred while running TaskCat, or you added the `-n` option, TaskCa
 for i in `aws s3 ls | grep taskcat | awk '{print $3}'`; do aws s3 rb s3://$i --force; done
 ```
 
+WARNING: This will delete _everyone's_ taskcat buckets, so please make sure nobody else is running a test at the same time you are.
+
 == Licensing
 
-The AWS Marketplace licenses are automatically generated when a valid SKU is configured. This SKU is referred to as the `AWSProductCode` in the CFN stack parameters. The following configuration is present on both XL Release and XL Deploy: 
+The AWS Marketplace licenses are automatically generated when a valid SKU is configured. This SKU is referred to as the `AWSProductCode` in the CFN stack parameters. You can find this parameter as passed to the nested stacks link:../templates/install-xl-platform-existing-vpc.yaml[here]. The following configuration is present on both XL Release and XL Deploy: 
 
 ```
 license {
@@ -45,4 +73,16 @@ license {
 }
 ```
 
-On startup, the instances send the SKU, along with metadata retrieved from the instance itself, to the licensing server in order to retrieve a valid license. The SKU is provided by AWS as part of the Marketplace listing. 
+On startup, the products send the SKU, along with some certificate metadata retrieved from the instance itself, to the licensing server in order to retrieve a valid license. The SKU is provided by AWS as part of the Marketplace listing. 
+
+== AMI Submission
+
+To submit the AMI to AWS, follow these steps:
+
+. From the xebialabs account, https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/sharingamis-explicit.html[share the AMI it with the xl-marketplace account]
+. In the xl-marketplace account, https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/CopyingAMIs.html[copy the AMI] into that account (you can't upload a shared AMI to the marketplace)
+. Log in to the https://aws.amazon.com/marketplace/management/manage-products/#/manage-amis.shared[AWS Marketplace Management Portal]
+. Select AMIs in the top menu bar
+. Select AMIs in the second level menu bar
+. Select the AMI you just copied from the list of unshared AMIs and then press the "Share AMIs" button.
+. Go to the list of shared AMIs and check the progress of the scanning.
