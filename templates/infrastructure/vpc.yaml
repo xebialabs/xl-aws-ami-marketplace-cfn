@@ -115,7 +115,7 @@ Resources:
       PortRange:
         From: 22
         To: 22
-  InboundPublicNetworkAclEntryRDP:
+  InboundPublicNetworkAclSMTP:
     Type: "AWS::EC2::NetworkAclEntry"
     Properties:
       NetworkAclId: !Ref "PublicNetworkAcl"
@@ -123,10 +123,10 @@ Resources:
       Protocol: 6
       RuleAction: "allow"
       Egress: False
-      CidrBlock: !Ref RemoteAccessCIDR
+      CidrBlock: "0.0.0.0/0"
       PortRange:
-        From: 3389
-        To: 3389
+        From: 587
+        To: 587
   InboundPublicNetworkAclEntryHighPorts:
     Type: "AWS::EC2::NetworkAclEntry"
     Properties:

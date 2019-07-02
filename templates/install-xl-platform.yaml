@@ -237,6 +237,7 @@ Resources:
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
         BastionInstanceType: !Ref BastionInstanceType
+        EnvironmentName: !Ref EnvironmentName
   RDSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
