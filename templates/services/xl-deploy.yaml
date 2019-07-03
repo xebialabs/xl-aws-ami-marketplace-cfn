@@ -62,7 +62,7 @@ Parameters:
     Type: String
     AllowedPattern: ^fs\-\w{8,}$
     ConstraintDescription: Must be a valid EFS identifier
-  LogGroup:
+  LogGroupName:
     Description: The CloudWatch log group to push XL Deploy logs to
     Type: String
     Default: '/aws/ec2/xld'
@@ -254,7 +254,7 @@ Resources:
                   </appender>
 
                   <appender name="CLOUDWATCH" class="io.github.dibog.AwsLogAppender">
-                      <createLogGroup>true</createLogGroup>
+                      <createLogGroup>false</createLogGroup>
                       <queueLength>100</queueLength>
                       <groupName>{{LogGroup}}</groupName>
                       <streamName>XLDeploy-${HOSTNAME:-default}</streamName>
@@ -304,7 +304,7 @@ Resources:
               owner: xl
               group: xl
               context:
-                LogGroup: !Ref LogGroup
+                LogGroup: !Ref xldLogGroup
           commands:
             00_remove_xlr:
               command: rm -Rf /opt/xlr /etc/systemd/system/xlr.service
@@ -389,6 +389,10 @@ Resources:
           yum update -y aws-cfn-bootstrap
 
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region} --configsets configuration
+  xldLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Ref LogGroupName
   CloudwatchRole:
     Type: AWS::IAM::Role
     Properties:
@@ -409,7 +413,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: "logs:*"
-                Resource: "arn:aws:logs:*:*:*"
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:*:log-group:${xldLogGroup}:*'
               - Effect: Allow
                 Action: "cloudwatch:*"
                 Resource: "*"
