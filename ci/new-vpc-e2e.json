@@ -16,7 +16,7 @@
         "ParameterKey": "DBMasterPassword"
     },
     {
-        "ParameterValue": "override",
+        "ParameterValue": "eqevani",
         "ParameterKey": "KeyPairName"
     },
 

@@ -179,23 +179,23 @@ Parameters:
 Mappings:
   AWSRegionAMI:
     eu-central-1:
-      AMIID: ami-0d474a9df1f1f7a51
+      AMIID: ami-0ca4ad74055a6ccdb
     eu-north-1:
-      AMIID: ami-0cfe325c7e63d74d7
+      AMIID: ami-0d6214a98c684a88c
     eu-west-1:
-      AMIID: ami-016efc83a75038991
+      AMIID: ami-0d1bc97722673bc83
     eu-west-2:
-      AMIID: ami-02f504e8a97a6b7e9
+      AMIID: ami-087013727747cfd48
     eu-west-3:
-      AMIID: ami-04dc46236d6216b85
+      AMIID: ami-0bb734b603bafd91b
     us-east-1:
-      AMIID: ami-00d1d67f95a8cd2aa
+      AMIID: ami-0407b18099b6b0946
     us-east-2:
-      AMIID: ami-0800eab6d027a79a1
+      AMIID: ami-0c1fc03ff91ad6fa6
     us-west-1:
-      AMIID: ami-0e09bcbd79f28d49f
+      AMIID: ami-038345a0b6c8c6fc9
     us-west-2:
-      AMIID: ami-032a5a2e76d197150
+      AMIID: ami-0a9b7d43a345ab526
 Conditions:
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
 Resources:
