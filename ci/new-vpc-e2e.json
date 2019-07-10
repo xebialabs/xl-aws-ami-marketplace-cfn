@@ -16,7 +16,7 @@
         "ParameterKey": "DBMasterPassword"
     },
     {
-        "ParameterValue": "eqevani",
+        "ParameterValue": "eqevani-ami",
         "ParameterKey": "KeyPairName"
     },
 
