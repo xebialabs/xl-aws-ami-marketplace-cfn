@@ -189,7 +189,7 @@ Mappings:
     eu-west-3:
       AMIID: ami-04dc46236d6216b85
     us-east-1:
-      AMIID: ami-00d1d67f95a8cd2aa
+      AMIID: ami-09f23e1ccbba6754b
     us-east-2:
       AMIID: ami-0800eab6d027a79a1
     us-west-1:
