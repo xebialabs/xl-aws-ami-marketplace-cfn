@@ -322,6 +322,23 @@ Resources:
                 EFS_MOUNT_POINT: /opt/xld/work
             03_get_ip_for_cluster:
               command: export IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4); sed -i "s/HOSTNAME/$IP/g" /opt/xld/conf/xl-deploy.conf
+            04_xld_startup:
+              command: |
+                DEFERRED_SSM_PARAM=${AWS_STACK_NAME}-xld_deferred_startup
+                if aws ssm put-parameter --name "$DEFERRED_SSM_PARAM" --value "true" --no-overwrite --type String --region $AWS_REGION ; then
+                  echo "XL Deploy deferred startup parameter was not found. XL Deploy will start immediately"
+                  systemctl enable xld
+                  systemctl start xld
+                else
+                  echo "XL Deploy deferred startup parameter was found. Wait until DB schema is created ..."
+                  sleep 30s
+                  systemctl enable xld
+                  systemctl start xld
+                  aws ssm delete-parameter --name "$DEFERRED_SSM_PARAM" --region $AWS_REGION
+                fi
+              env:
+                AWS_REGION: !Sub ${AWS::Region}
+                AWS_STACK_NAME: !Sub ${AWS::StackName}
           services:
             sysvinit:
               xld:
@@ -391,7 +408,7 @@ Resources:
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region} --configsets configuration
   xldLogGroup:
     Type: AWS::Logs::LogGroup
-    Properties: 
+    Properties:
       LogGroupName: !Ref LogGroupName
   CloudwatchRole:
     Type: AWS::IAM::Role
@@ -415,6 +432,9 @@ Resources:
                 Action: "logs:*"
                 Resource: !Sub 'arn:aws:logs:${AWS::Region}:*:log-group:${xldLogGroup}:*'
               - Effect: Allow
+                Action: "ssm:*"
+                Resource: "arn:aws:ssm:*:*:*"
+              - Effect: Allow
                 Action: "cloudwatch:*"
                 Resource: "*"
   XLDInstanceProfile:
@@ -426,5 +446,5 @@ Resources:
 
 Outputs:
   XLDASGName:
-    Description: The name of the XL Deploy Auto-scaling Group 
+    Description: The name of the XL Deploy Auto-scaling Group
     Value: !Ref XLDeployGroup
