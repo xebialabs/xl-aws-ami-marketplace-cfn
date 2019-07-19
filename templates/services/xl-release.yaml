@@ -10,6 +10,7 @@ Parameters:
       - c5.large
       - c5.xlarge
       - m5.large
+      - m5.2xlarge
     ConstraintDescription: must be a valid EC2 instance type.
   ASGInstanceName:
     Description: ASG instances name
