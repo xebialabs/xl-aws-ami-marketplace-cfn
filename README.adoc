@@ -5,7 +5,7 @@
 
 == Contents
 
-This repository contains a set of AWS CloudFormation YAML templates that allow you to set up the XebiaLabs DevOps Platform on AWS. 
+This repository contains a set of AWS CloudFormation YAML templates that allow you to set up the XebiaLabs DevOps platform on AWS. 
 
 == AMI Description
 
@@ -21,8 +21,8 @@ The same AMI will also be used for the bastion host in the Full Setup use case. 
 
 This setup supports two use cases:
 
-1. *Full Setup:* If an administrator chooses this option, the CloudFormation stack will create all resources required to run the XL Platform. This includes a new VPC, RDS cluster, bastion hosts, auto-scaling groups and all related security groups, subnets, internet gateways and NAT gateways. 
-2. *Existing VPC & RDS Setup:* If an administrator chooses this option, the CloudFormation stack will only create the bare minimum infrastructure required to run the XL Platform. The administrator will need to provision the supporting infrastructure themselves. 
+1. *Full Setup:* If an administrator chooses this option, the CloudFormation stack will create all resources required to run the XL platform. This includes a new VPC, RDS cluster, bastion hosts, auto-scaling groups and all related security groups, subnets, internet gateways and NAT gateways. 
+2. *Existing VPC & RDS Setup:* If an administrator chooses this option, the CloudFormation stack will only create the bare minimum infrastructure required to run the XL platform. The administrator will need to provision the supporting infrastructure themselves. 
 
 The exact resources provisioned, as well as an explanation of the purposes of the resources, can be found in the table below.
 
@@ -51,30 +51,30 @@ The exact resources provisioned, as well as an explanation of the purposes of th
 
 === Full Setup
 
-When opting for this setup method, the administrator only needs to have the following AWS resources configured in order to deploy the XL Platform:
+When opting for this setup method, the administrator only needs to have the following AWS resources configured in order to deploy the XL platform:
 
 - A valid https://docs.aws.amazon.com/acm/latest/userguide/import-certificate.html[SSL/TLS certificate in Amazon Certificate Manager (ACM)] in order to expose the ALB endpoints over HTTPS
 - A https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html[key pair] to SSH into the instances
 
-The following is an example of the CloudFormation parameters -
+Here is an example of the CloudFormation parameters:
 
 image::images/cfn-new-1.png[]
 image::images/cfn-new-2.png[]
 image::images/cfn-new-3.png[]
 
 
-NOTE: Should the administrator tear down the CloudFormation stack, the RDS instance will also be removed. A https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CreateSnapshot.html[snapshot] will however be automatically created prior to the database being deleted. The https://aws.amazon.com/backup/pricing/[cost] of this snapshot is dependent on the size of the databases at the time of deletion. 
+NOTE: If the administrator tears down the CloudFormation stack, the RDS instance will also be removed. A https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CreateSnapshot.html[snapshot] will however be automatically created prior to the database being deleted. The https://aws.amazon.com/backup/pricing/[cost] of this snapshot is dependent on the size of the databases at the time of deletion. 
 
 === Existing VPC & RDS Setup
 
-When opting for this setup method, the administrator should already have the AWS resources as mentioned in the table above configured in order to deploy the XL Platform. In addition to these resources, the administrator will need to configure the following:
+When opting for this setup method, the administrator should already have the AWS resources as mentioned in the table above configured in order to deploy the XL platform. In addition to these resources, the administrator will need to configure the following:
 
 - A valid https://docs.aws.amazon.com/acm/latest/userguide/import-certificate.html[SSL/TLS certificate in Amazon Certificate Manager (ACM)] in order to expose the ALB endpoints over HTTPS
 - A https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html[key pair] to SSH into the instances
 
-NOTE: The public and private subnets are responsible for traffic segregation. Never expose your databases and other non-public services on public subnets. The only resource that should be directly attached to the public subnet should be your ALB
+NOTE: The public and private subnets are responsible for traffic segregation. Never expose your databases and other non-public services on public subnets. The only resource that should be directly attached to the public subnet should be your ALB.
 
-The following is an example of the CloudFormation parameters -
+Here is an example of the CloudFormation parameters:
 
 image::images/cfn-1.png[]
 image::images/cfn-2.png[]
@@ -82,6 +82,6 @@ image::images/cfn-3.png[]
 
 == Post setup
 
-After the stack has been started up, the XL Release and XL Deploy endpoints, as well as the Elastic IP address of the bastion host (should the administrator have chosen the Full Setup installation option), will be part of the stack outputs. To find these, go to the https://us-west-1.console.aws.amazon.com/cloudformation/home?region=us-west-1[CloudFormation Console] in your chosen region, select the main/master stack and then click on "Outputs". Below is an example of the outputs:
+After the stack has been started up, the XL Release and XL Deploy endpoints, as well as the Elastic IP address of the bastion host - if the administrator chose the Full Setup installation option - will be part of the stack outputs. To find these, go to the https://us-west-1.console.aws.amazon.com/cloudformation/home?region=us-west-1[CloudFormation Console] in your chosen region, select the main/master stack and then click on "Outputs". Here is an example of the outputs:
 
 image::images/cfn-outputs-full.png[]
