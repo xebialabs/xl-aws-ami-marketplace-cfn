@@ -5,11 +5,11 @@
 
 == Contents
 
-This repository contains a set of AWS CloudFormation YAML templates that allows you to set up the XebiaLabs DevOps Platform on AWS. 
+This repository contains a set of AWS CloudFormation YAML templates that allow you to set up the XebiaLabs DevOps Platform on AWS. 
 
 == AMI Description
 
-The AMI used in this platform contains both XL Deploy and XL Release. Due to limitations on AWS' platform, this is currently the only way to distribute two products as a single listing. 
+The AMI used in this platform contains both XL Deploy and XL Release. Due to limitations on AWS's platform, this is currently the only way to distribute two products as a single listing. 
 
 On startup, userdata provides details as to which product should be launched for a given auto-scaling group. 
 
