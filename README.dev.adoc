@@ -13,7 +13,7 @@ Follow these steps to execute tests using AWS TaskCat.
 [
   {
     "ParameterKey": "KeyPairName",
-    "ParameterValue": "tbezuidenhout-us-west-1"
+    "ParameterValue": "my-key-pair"
   },
   {
     "ParameterKey": "CertificateArn",
