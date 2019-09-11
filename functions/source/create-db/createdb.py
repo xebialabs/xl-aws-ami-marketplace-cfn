@@ -2,7 +2,6 @@
 import psycopg2
 from cfn_lambda_handler import Handler, SUCCESS, FAILED
 import logging
-import json
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

@@ -234,8 +234,6 @@ Resources:
        DBPassword: !Ref DBPassword
        DBHost: !Ref DBHost
        AuroraRDSSecurityGroupID: !Ref RDSSecurityGroupID
-       BucketName: !Ref BucketName
-       BucketKeyPrefix: !Ref BucketKeyPrefix
   EFSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
