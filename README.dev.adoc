@@ -2,6 +2,10 @@
 
 This documentation is not meant for end-user consumption, but rather for internal teams working on the XL Platform AMI Marketplace project.
 
+= Lmabda code
+
+Lambda code now resides in https://github.com/xebialabs/aws-rds-lamba. There you will find instructions how to build it with sam and publish it in sar
+
 == Executing the tests
 
 Follow these steps to execute tests using AWS TaskCat. 
