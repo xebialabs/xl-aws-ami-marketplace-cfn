@@ -278,8 +278,7 @@ Resources:
        AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
        EfsId: !GetAtt EFSStack.Outputs.FilesystemXLD
        XLDeployInstanceType: !Ref XLPlatformInstanceType
-       # TO BE CHANGED WITH REAL PRODUCT CODE
-       AWSProductCode: TODO-123456789
+       AWSProductCode: bg7yz7e9gqdygvqnkk8id4l4v
   XLReleaseStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -304,8 +303,7 @@ Resources:
         AMIID: !FindInMap [AWSRegionAMI, !Ref 'AWS::Region', AMIID]
         XLReleaseInstanceType: !Ref XLPlatformInstanceType
         EfsId: !GetAtt EFSStack.Outputs.FilesystemXLR
-        # TO BE CHANGED WITH REAL PRODUCT CODE
-        AWSProductCode: TODO-123456789
+        AWSProductCode: bg7yz7e9gqdygvqnkk8id4l4v
   CloudWatchDashboard:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
