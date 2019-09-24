@@ -1,8 +1,6 @@
----
 AWSTemplateFormatVersion: 2010-09-09
-Description: >
-  Sub template that creates an Aurora PostgreSQL cluster.
-Parameters: 
+Description: "Sub template that creates an Aurora PostgreSQL cluster.\n"
+Parameters:
   DataSubnetIDs:
     Description: The subnets the Aurora cluster should be deployed to
     Type: List<AWS::EC2::Subnet::Id>
@@ -17,41 +15,43 @@ Parameters:
     Default: '7'
     Description: The number of days for which automatic DB snapshots are retained.
     Type: String
-    AllowedPattern: "^[1-9][0-9]*"
+    AllowedPattern: ^[1-9][0-9]*
   DBInstanceClass:
     AllowedValues:
-    - db.r4.16xlarge
-    - db.r4.8xlarge
-    - db.r4.4xlarge
-    - db.r4.2xlarge
-    - db.r4.xlarge
-    - db.r4.large
+      - db.r4.16xlarge
+      - db.r4.8xlarge
+      - db.r4.4xlarge
+      - db.r4.2xlarge
+      - db.r4.xlarge
+      - db.r4.large
     ConstraintDescription: Must select a valid database instance type.
     Default: db.r4.large
     Description: The name of the compute and memory capacity class of the DB instance.
     Type: String
   DBMasterUsername:
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+    ConstraintDescription: must begin with a letter and contain only alphanumeric
+      characters.
     Default: xladmin
     Description: The database admin account username
     MaxLength: '16'
     MinLength: '1'
     Type: String
   DBMasterPassword:
-    AllowedPattern: "(?=\\S)[^@/\"\\r\\n\\t\\f\\s]*"
-    ConstraintDescription: 'Min 8 alphanumeric. Cannot contain white space, @, /, "'
+    AllowedPattern: (?=\S)[^@/"\r\n\t\f\s]*
+    ConstraintDescription: Min 8 alphanumeric. Cannot contain white space, @, /, "
     Description: The database admin account password
     MaxLength: '41'
     MinLength: '8'
-    NoEcho: True
+    NoEcho: true
     Type: String
   DBMultiAZ:
     AllowedValues:
       - 'true'
       - 'false'
     Default: 'true'
-    Description: Specifies if the database instance is a multiple Availability Zone deployment.
+    Description: Specifies if the database instance is a multiple Availability Zone
+      deployment.
     Type: String
   EnvironmentName:
     Type: String
@@ -60,75 +60,97 @@ Parameters:
   VPCID:
     Type: AWS::EC2::VPC::Id
     Description: The VPC ID the Security Groups should be deployed to
-
-# Mappings: 
-Conditions: 
-  CreateReadReplica: !Equals [ !Ref DBMultiAZ, true ]
-
+Conditions:
+  CreateReadReplica:
+    Fn::Equals:
+      - Ref: DBMultiAZ
+      - true
 Resources:
   AuroraRDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Secure access to the RDS database by allowing only XebiaLabs ASGs
-      VpcId: !Ref VPCID
+      GroupDescription: Secure access to the RDS database by allowing only XebiaLabs
+        ASGs
+      VpcId:
+        Ref: VPCID
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-RDS
+          Value:
+            Fn::Sub: ${EnvironmentName}-RDS
   RDSIngressSelf:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      GroupId: !Ref AuroraRDSSecurityGroup
-      SourceSecurityGroupId: !Ref AuroraRDSSecurityGroup
+      GroupId:
+        Ref: AuroraRDSSecurityGroup
+      SourceSecurityGroupId:
+        Ref: AuroraRDSSecurityGroup
       IpProtocol: '-1'
   AuroraDBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: Subnets available for the RDS Aurora DB Instance
-      SubnetIds: !Ref DataSubnetIDs
+      SubnetIds:
+        Ref: DataSubnetIDs
   AuroraDBCluster:
     Type: AWS::RDS::DBCluster
     Properties:
-      BackupRetentionPeriod: !Ref DBBackupRetentionPeriod
-      DBSubnetGroupName: !Ref AuroraDBSubnetGroup
+      BackupRetentionPeriod:
+        Ref: DBBackupRetentionPeriod
+      DBSubnetGroupName:
+        Ref: AuroraDBSubnetGroup
       Engine: aurora-postgresql
-      EngineVersion: '9.6.9'
+      EngineVersion: 9.6.9
       DBClusterParameterGroupName: default.aurora-postgresql9.6
-      MasterUsername: !Ref DBMasterUsername
-      MasterUserPassword: !Ref DBMasterPassword
+      MasterUsername:
+        Ref: DBMasterUsername
+      MasterUserPassword:
+        Ref: DBMasterPassword
       Port: 5432
-      VpcSecurityGroupIds: 
-      - !Ref AuroraRDSSecurityGroup
+      VpcSecurityGroupIds:
+        - Ref: AuroraRDSSecurityGroup
   AuroraDBPrimaryInstance:
     Type: AWS::RDS::DBInstance
     Properties:
       Engine: aurora-postgresql
-      EngineVersion: '9.6.9'
+      EngineVersion: 9.6.9
       DBParameterGroupName: default.aurora-postgresql9.6
-      DBClusterIdentifier: !Ref AuroraDBCluster
-      DBInstanceClass: !Ref DBInstanceClass
-      DBSubnetGroupName: !Ref AuroraDBSubnetGroup
-      AutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
+      DBClusterIdentifier:
+        Ref: AuroraDBCluster
+      DBInstanceClass:
+        Ref: DBInstanceClass
+      DBSubnetGroupName:
+        Ref: AuroraDBSubnetGroup
+      AutoMinorVersionUpgrade:
+        Ref: DBAutoMinorVersionUpgrade
   AuroraDBSecondaryInstance:
     Type: AWS::RDS::DBInstance
     Condition: CreateReadReplica
     Properties:
       Engine: aurora-postgresql
-      EngineVersion: '9.6.9'
+      EngineVersion: 9.6.9
       DBParameterGroupName: default.aurora-postgresql9.6
-      DBClusterIdentifier: !Ref AuroraDBCluster
-      DBInstanceClass: !Ref DBInstanceClass
-      DBSubnetGroupName: !Ref AuroraDBSubnetGroup
-      AutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
-
+      DBClusterIdentifier:
+        Ref: AuroraDBCluster
+      DBInstanceClass:
+        Ref: DBInstanceClass
+      DBSubnetGroupName:
+        Ref: AuroraDBSubnetGroup
+      AutoMinorVersionUpgrade:
+        Ref: DBAutoMinorVersionUpgrade
 Outputs:
   AuroraEndPointAddress:
     Description: Aurora Endpoint to connect
-    Value: !GetAtt AuroraDBCluster.Endpoint.Address
+    Value:
+      Fn::GetAtt:
+        - AuroraDBCluster
+        - Endpoint.Address
   AuroraEndPointPort:
     Description: Aurora Endpoint to connect
-    Value: !GetAtt AuroraDBCluster.Endpoint.Port
+    Value:
+      Fn::GetAtt:
+        - AuroraDBCluster
+        - Endpoint.Port
   AuroraRDSSecurityGroupID:
     Description: A reference to the security group for RDS
-    Value: !Ref AuroraRDSSecurityGroup
-
-...
+    Value:
+      Ref: AuroraRDSSecurityGroup

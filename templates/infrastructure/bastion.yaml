@@ -1,7 +1,6 @@
----
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This template is intended to create an auto-scaling group of Linux bastion instances
-  in the public VPC subnets.
+Description: This template is intended to create an auto-scaling group of Linux bastion
+  instances in the public VPC subnets.
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -28,12 +27,9 @@ Metadata:
       PublicSubnetIDs:
         default: Public Subnets IDs
 Parameters:
-  EnvironmentName:
-    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-    Description: An environment name that will be prefixed to resource names.
-    Type: String
   BastionTenancy:
-    Description: 'VPC Tenancy to launch the bastion in. Options: ''dedicated'' or ''default'''
+    Description: 'VPC Tenancy to launch the bastion in. Options: ''dedicated'' or
+      ''default'''
     Type: String
     Default: default
     AllowedValues:
@@ -60,21 +56,23 @@ Parameters:
     Type: Number
     Default: '10'
   RemoteAccessCIDR:
-    AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"
-    Description: "Ip range off your home network from where you can access the bastion hosts"
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    Description: Ip range off your home network from where you can access the bastion
+      hosts
     Type: String
   AMIID:
     Description: The AMI ID used to for XL DevoPS Platform
     Type: AWS::EC2::Image::Id
-
 Conditions:
-  GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
-
+  GovCloudCondition:
+    Fn::Equals:
+      - Ref: AWS::Region
+      - us-gov-west-1
 Resources:
   BastionSecurityGroup:
-    Type: "AWS::EC2::SecurityGroup"
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Enables SSH Access to Bastion Hosts"
+      GroupDescription: Enables SSH Access to Bastion Hosts
       VpcId:
         Ref: VPCID
       SecurityGroupIngress:
@@ -83,15 +81,12 @@ Resources:
           ToPort: 22
           CidrIp:
             Ref: RemoteAccessCIDR
-      Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName}-BastionHosts
   BastionMainLogGroup:
     Type: AWS::Logs::LogGroup
   BastionHostRole:
     Type: AWS::IAM::Role
     Properties:
-      Path: "/"
+      Path: /
       AssumeRolePolicyDocument:
         Statement:
           - Action:
@@ -129,7 +124,7 @@ Resources:
           - Action:
               - ec2:AssociateAddress
               - ec2:DescribeAddresses
-            Resource: "*"
+            Resource: '*'
             Effect: Allow
       Roles:
         - Ref: BastionHostRole
@@ -139,7 +134,7 @@ Resources:
     Properties:
       Roles:
         - Ref: BastionHostRole
-      Path: "/"
+      Path: /
   EIP1:
     Type: AWS::EC2::EIP
     Properties:
@@ -149,7 +144,8 @@ Resources:
     Properties:
       LaunchConfigurationName:
         Ref: BastionLaunchConfiguration
-      VPCZoneIdentifier: !Ref 'PublicSubnetIDs'
+      VPCZoneIdentifier:
+        Ref: PublicSubnetIDs
       MinSize: '1'
       MaxSize: '2'
       Cooldown: '300'
@@ -169,7 +165,8 @@ Resources:
         config:
           commands:
             b-bootstrap:
-              command: "/opt/bastion/bastion_bootstrap.sh --banner https://aws-quickstart.s3.amazonaws.com/quickstart-linux-bastion/scripts/banner_message.txt --enable false --tcp-forwarding false --x11-forwarding false"
+              command: /opt/bastion/bastion_bootstrap.sh --banner https://aws-quickstart.s3.amazonaws.com/quickstart-linux-bastion/scripts/banner_message.txt
+                --enable false --tcp-forwarding false --x11-forwarding false
     Properties:
       AssociatePublicIpAddress: true
       PlacementTenancy:
@@ -178,13 +175,14 @@ Resources:
         Ref: KeyPairName
       IamInstanceProfile:
         Ref: BastionHostProfile
-      ImageId: !Ref 'AMIID'
+      ImageId:
+        Ref: AMIID
       SecurityGroups:
         - Ref: BastionSecurityGroup
       InstanceType:
         Ref: BastionInstanceType
       BlockDeviceMappings:
-        - DeviceName: "/dev/xvda"
+        - DeviceName: /dev/xvda
           Ebs:
             VolumeSize:
               Ref: RootVolumeSize
@@ -201,22 +199,24 @@ Resources:
               - CLOUDWATCHGROUP=
               - Ref: BastionMainLogGroup
               - "\n"
-              - 'yum update -y aws-cfn-bootstrap'
+              - yum update -y aws-cfn-bootstrap
               - "\n"
               - '/opt/aws/bin/cfn-init -v --stack '
               - Ref: AWS::StackName
-              - " --resource BastionLaunchConfiguration --region "
+              - ' --resource BastionLaunchConfiguration --region '
               - Ref: AWS::Region
               - "\n"
               - '/opt/aws/bin/cfn-signal -e $? --stack '
               - Ref: AWS::StackName
-              - " --resource BastionAutoScalingGroup --region "
+              - ' --resource BastionAutoScalingGroup --region '
               - Ref: AWS::Region
               - "\n"
 Outputs:
   BastionSecurityGroup:
     Description: A reference to the security group for Bastion ASG
-    Value: !Ref BastionSecurityGroup
+    Value:
+      Ref: BastionSecurityGroup
   EIP1:
     Description: Elastic IP 1 for Bastion
-    Value: !Ref EIP1
+    Value:
+      Ref: EIP1

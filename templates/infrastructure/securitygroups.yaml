@@ -1,6 +1,4 @@
-Description: >
-  This template contains the security groups required by our entire stack.
-
+Description: "This template contains the security groups required by our entire stack.\n"
 Parameters:
   EnvironmentName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
@@ -15,14 +13,12 @@ Parameters:
   BastionSecurityGroupID:
     Description: Bastion Host security group ID
     Type: AWS::EC2::SecurityGroup::Id
-
 Resources:
-  # This security group defines who/where is allowed to access the Application Load Balancer.
-  # The Ingress rules will be added to this Security Group by the subtemplates of this stack.
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      VpcId: !Ref VPCID
+      VpcId:
+        Ref: VPCID
       GroupDescription: Access to the load balancer that sits in front of ASGs
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -35,83 +31,92 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-LoadBalancers
-
+          Value:
+            Fn::Sub: ${EnvironmentName}-LoadBalancers
   XLReleaseASGSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      VpcId: !Ref VPCID
+      VpcId:
+        Ref: VPCID
       GroupDescription: Enable SSH access and HTTP from the load balancer only
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          SourceSecurityGroupId: !Ref BastionSecurityGroupID
+          SourceSecurityGroupId:
+            Ref: BastionSecurityGroupID
         - IpProtocol: tcp
           FromPort: 5516
           ToPort: 5516
-          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          SourceSecurityGroupId:
+            Ref: LoadBalancerSecurityGroup
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-XLRelease-ASG
-
+          Value:
+            Fn::Sub: ${EnvironmentName}-XLRelease-ASG
   XLDeployASGSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      VpcId: !Ref VPCID
+      VpcId:
+        Ref: VPCID
       GroupDescription: Enable SSH access and HTTP from the load balancer only
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          SourceSecurityGroupId: !Ref BastionSecurityGroupID
+          SourceSecurityGroupId:
+            Ref: BastionSecurityGroupID
         - IpProtocol: tcp
           FromPort: 4516
           ToPort: 4516
-          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          SourceSecurityGroupId:
+            Ref: LoadBalancerSecurityGroup
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-XLDeploy-ASG
-
+          Value:
+            Fn::Sub: ${EnvironmentName}-XLDeploy-ASG
   SGIngressXLRelease:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      GroupId: !Ref XLReleaseASGSecurityGroup
-      SourceSecurityGroupId: !Ref XLReleaseASGSecurityGroup
+      GroupId:
+        Ref: XLReleaseASGSecurityGroup
+      SourceSecurityGroupId:
+        Ref: XLReleaseASGSecurityGroup
       IpProtocol: '-1'
-
   SGIngressXLDeploy:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      GroupId: !Ref XLDeployASGSecurityGroup
-      SourceSecurityGroupId: !Ref XLDeployASGSecurityGroup
+      GroupId:
+        Ref: XLDeployASGSecurityGroup
+      SourceSecurityGroupId:
+        Ref: XLDeployASGSecurityGroup
       IpProtocol: '-1'
-
-  # Allow ingress from ASGs to the RDS
   RDSASGIngressXLRelease:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      GroupId: !Ref RDSSecurityGroupID
-      SourceSecurityGroupId: !Ref XLReleaseASGSecurityGroup
+      GroupId:
+        Ref: RDSSecurityGroupID
+      SourceSecurityGroupId:
+        Ref: XLReleaseASGSecurityGroup
       IpProtocol: '-1'
-
   RDSASGIngressXLDeploy:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      GroupId: !Ref RDSSecurityGroupID
-      SourceSecurityGroupId: !Ref XLDeployASGSecurityGroup
+      GroupId:
+        Ref: RDSSecurityGroupID
+      SourceSecurityGroupId:
+        Ref: XLDeployASGSecurityGroup
       IpProtocol: '-1'
-
 Outputs:
-
   XLDeployASGSecurityGroup:
     Description: A reference to the security group for XL Deploy ASG
-    Value: !Ref XLDeployASGSecurityGroup
-
+    Value:
+      Ref: XLDeployASGSecurityGroup
   XLReleaseASGSecurityGroup:
     Description: A reference to the security group for XL Release ASG
-    Value: !Ref XLReleaseASGSecurityGroup
-
+    Value:
+      Ref: XLReleaseASGSecurityGroup
   LoadBalancerSecurityGroup:
     Description: A reference to the security group for load balancers
-    Value: !Ref LoadBalancerSecurityGroup
+    Value:
+      Ref: LoadBalancerSecurityGroup

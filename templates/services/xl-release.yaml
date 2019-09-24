@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: |
-  This template will launch 2 EC2 instances with XL Release
+Description: "This template will launch 2 EC2 instances with XL Release\n"
 Parameters:
   XLReleaseInstanceType:
     Description: XL Release EC2 instance type
@@ -27,7 +26,7 @@ Parameters:
     Description: The admin password of XL Release
     MinLength: 8
     Type: String
-    NoEcho: True
+    NoEcho: true
   XLReleasePort:
     Description: The port to run XL Release on
     AllowedPattern: ^[1-9][0-9]{3,4}$
@@ -37,7 +36,7 @@ Parameters:
     Description: ALB TargetGroup ARN for XL Release
     Type: String
   SecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup::Id'
+    Type: AWS::EC2::SecurityGroup::Id
     Description: The Security Group that grants access
   DBHost:
     Description: The Postgres DB Host/Endpoint
@@ -53,12 +52,15 @@ Parameters:
   DBPassword:
     Description: The Postgres DB Password
     Type: String
-    NoEcho: True
+    NoEcho: true
   DBDriver:
     Description: The database driver to use
     Type: String
-    Default: 'org.postgresql.Driver'
-    AllowedValues: [ 'org.postgresql.Driver', 'com.microsoft.sqlserver.jdbc.SQLServerDriver', 'com.mysql.cj.jdbc.Driver' ]
+    Default: org.postgresql.Driver
+    AllowedValues:
+      - org.postgresql.Driver
+      - com.microsoft.sqlserver.jdbc.SQLServerDriver
+      - com.mysql.cj.jdbc.Driver
   EfsId:
     Description: The ID of the EFS filesystem within the selected VPC
     Type: String
@@ -70,7 +72,7 @@ Parameters:
   ReportingDBPassword:
     Description: The reporting DB password
     Type: String
-    NoEcho: True
+    NoEcho: true
   ReportingDBHost:
     Description: The reporting DB Host/Endpoint
     Type: String
@@ -81,9 +83,12 @@ Parameters:
   ReportingDBDriver:
     Description: The database driver to use for the Reporting DB
     Type: String
-    Default: 'org.postgresql.Driver'
-    AllowedValues: [ 'org.postgresql.Driver', 'com.microsoft.sqlserver.jdbc.SQLServerDriver', 'com.mysql.cj.jdbc.Driver' ]
-  LogGroupName:
+    Default: org.postgresql.Driver
+    AllowedValues:
+      - org.postgresql.Driver
+      - com.microsoft.sqlserver.jdbc.SQLServerDriver
+      - com.mysql.cj.jdbc.Driver
+  LogGroup:
     Description: The CloudWatch log group for XL Release
     Type: String
     Default: /aws/ec2/xlr
@@ -93,31 +98,29 @@ Parameters:
   AWSProductCode:
     Description: The AWS AMI Marketplace Listing Product Code
     Type: String
-
 Mappings:
   DBType:
-    'org.postgresql.Driver':
-      Name: 'postgresql'
-    'com.microsoft.sqlserver.jdbc.SQLServerDriver':
-      Name: 'sqlserver'
-    'com.mysql.cj.jdbc.Driver':
-      Name: 'mysql'
+    org.postgresql.Driver:
+      Name: postgresql
+    com.microsoft.sqlserver.jdbc.SQLServerDriver:
+      Name: sqlserver
+    com.mysql.cj.jdbc.Driver:
+      Name: mysql
   ReportingDBType:
-    'org.postgresql.Driver':
-      Name: 'postgresql'
-    'com.microsoft.sqlserver.jdbc.SQLServerDriver':
-      Name: 'sqlserver'
-    'com.mysql.cj.jdbc.Driver':
-      Name: 'mysql'
-#Conditions:
-#  SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
-
+    org.postgresql.Driver:
+      Name: postgresql
+    com.microsoft.sqlserver.jdbc.SQLServerDriver:
+      Name: sqlserver
+    com.mysql.cj.jdbc.Driver:
+      Name: mysql
 Resources:
   XLReleaseGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier: !Ref 'PrivateSubnetIDs'
-      LaunchConfigurationName: !Ref 'LaunchConfig'
+      VPCZoneIdentifier:
+        Ref: PrivateSubnetIDs
+      LaunchConfigurationName:
+        Ref: LaunchConfig
       Tags:
         - Key: Name
           PropagateAtLaunch: true
@@ -126,7 +129,7 @@ Resources:
       MinSize: '2'
       MaxSize: '2'
       TargetGroupARNs:
-        - !Ref TargetGroupARN
+        - Ref: TargetGroupARN
     CreationPolicy:
       ResourceSignal:
         Timeout: PT10M
@@ -143,299 +146,223 @@ Resources:
       AWS::CloudFormation::Init:
         template:
           files:
-            '/opt/xlr/conf/xl-release-server.conf':
-              content: |
-                admin.password={{XLReleaseAdminPassword}}
-                client.automatically.map.all.deployables=true
-                http.upload.buffer=262144
-                client.automatically.map.all.deployables.on.update=false
-                hide.internals=false
-                server.resolve.application.dependencies=true
-                client.server_poll.delay=30000
-                ssl=false
-                http.port={{XLReleasePort}}
-                threads.min=3
-                client.session.timeout.minutes=10
-                client.session.remember.enabled=true
-                threads.max=24
-                maintenance.forbidden_paths=deployit/task\:POST,deployit/tasks/v2\:POST,deployit/control\:POST
-                ssl.mutual=false
-                http.bind.address=0.0.0.0
-                jcr.repository.path=repository
-                client.automatically.map.all.deployables.on.initial=false
-                http.context.root=/release
-                importable.packages.path=importablePackages
-                server.mapping.override.deployed.fields.on.update=true
+            /opt/xlr/conf/xl-release-server.conf:
+              content: "admin.password={{XLReleaseAdminPassword}}\nclient.automatically.map.all.deployables=true\n\
+                http.upload.buffer=262144\nclient.automatically.map.all.deployables.on.update=false\n\
+                hide.internals=false\nserver.resolve.application.dependencies=true\n\
+                client.server_poll.delay=30000\nssl=false\nhttp.port={{XLReleasePort}}\n\
+                threads.min=3\nclient.session.timeout.minutes=10\nclient.session.remember.enabled=true\n\
+                threads.max=24\nmaintenance.forbidden_paths=deployit/task\\:POST,deployit/tasks/v2\\\
+                :POST,deployit/control\\:POST\nssl.mutual=false\nhttp.bind.address=0.0.0.0\n\
+                jcr.repository.path=repository\nclient.automatically.map.all.deployables.on.initial=false\n\
+                http.context.root=/release\nimportable.packages.path=importablePackages\n\
+                server.mapping.override.deployed.fields.on.update=true\n"
               owner: xl
               group: xl
               context:
-                XLReleaseAdminPassword: !Ref 'XLReleaseAdminPassword'
-                XLReleasePort: !Ref 'XLReleasePort'
-            '/opt/xlr/conf/xl-release.conf':
-              content: |
-                xl {
-                  cluster {
-                    mode = full
-                    name = "xl-release_cluster"
-                    node {
-                        clusterPort = 2552
-                        hostname = "HOSTNAME"
-                        id = "HOSTNAME"
-                    }
-                    akka {
-                      loglevel = "INFO"
-                      actor.debug.receive = off
-                      remote {
-                        log-received-messages = off
-                        log-sent-messages = off
-                      }
-                    }
-                  }
-
-                  license {
-                    product=xl-release
-                    kind = ami
-                    ami {
-                      productCode = "{{ AWSProductCode }}"
-                    }
-                  }
-                  metrics {
-                    enabled = true
-                  }
-                  database {
-                    db-driver-classname = "{{DBDriver}}"
-                    db-url = "jdbc:{{DBType}}://{{DBHost}}:{{DBPort}}/xlrelease"
-                    db-username = "{{DBUser}}"
-                    db-password = "{{DBPassword}}",
-                  }
-                  reporting {
-                    db-driver-classname = "{{ReportingDBDriver}}"
-                    db-url = "jdbc:{{ReportingDBType}}://{{ReportingDBHost}}:{{ReportingDBPort}}/xlrarchive"
-                    db-username = "{{ReportingDBUser}}"
-                    db-password = "{{ReportingDBPassword}}"
-                    engine {
-                      maxThreadsCount = 10
-                      location = "reports"
-                      cleanUpInterval = 6 hours
-                    }
-                  }
-                }
+                XLReleaseAdminPassword:
+                  Ref: XLReleaseAdminPassword
+                XLReleasePort:
+                  Ref: XLReleasePort
+            /opt/xlr/conf/xl-release.conf:
+              content: "xl {\n  cluster {\n    mode = full\n    name = \"xl-release_cluster\"\
+                \n    node {\n        clusterPort = 2552\n        hostname = \"HOSTNAME\"\
+                \n        id = \"HOSTNAME\"\n    }\n    akka {\n      loglevel = \"\
+                INFO\"\n      actor.debug.receive = off\n      remote {\n        log-received-messages\
+                \ = off\n        log-sent-messages = off\n      }\n    }\n  }\n\n\
+                \  license {\n    product=xl-release\n    kind = ami\n    ami {\n\
+                \      productCode = \"{{ AWSProductCode }}\"\n    }\n  }\n  metrics\
+                \ {\n    enabled = true\n  }\n  database {\n    db-driver-classname\
+                \ = \"{{DBDriver}}\"\n    db-url = \"jdbc:{{DBType}}://{{DBHost}}:{{DBPort}}/xlrelease\"\
+                \n    db-username = \"{{DBUser}}\"\n    db-password = \"{{DBPassword}}\"\
+                ,\n  }\n  reporting {\n    db-driver-classname = \"{{ReportingDBDriver}}\"\
+                \n    db-url = \"jdbc:{{ReportingDBType}}://{{ReportingDBHost}}:{{ReportingDBPort}}/xlrarchive\"\
+                \n    db-username = \"{{ReportingDBUser}}\"\n    db-password = \"\
+                {{ReportingDBPassword}}\"\n    engine {\n      maxThreadsCount = 10\n\
+                \      location = \"reports\"\n      cleanUpInterval = 6 hours\n \
+                \   }\n  }\n}\n"
               owner: xl
               group: xl
               context:
-                AWSProductCode: !Ref AWSProductCode
-                DBUser: !Ref 'DBUser'
-                DBPassword: !Ref 'DBPassword'
-                DBHost: !Ref 'DBHost'
-                DBPort: !Ref 'DBPort'
-                DBDriver: !Ref 'DBDriver'
-                DBType: !FindInMap [DBType, !Ref 'DBDriver', Name]
-                ReportingDBUser: !Ref 'ReportingDBUser'
-                ReportingDBPassword: !Ref 'ReportingDBPassword'
-                ReportingDBHost: !Ref 'ReportingDBHost'
-                ReportingDBPort: !Ref 'ReportingDBPort'
-                ReportingDBDriver: !Ref 'ReportingDBDriver'
-                ReportingDBType: !FindInMap [ReportingDBType, !Ref 'ReportingDBDriver', Name]
-            '/opt/xlr/conf/logback.xml':
-              content: |
-                <configuration>
-                  <jmxConfigurator />
-                  <contextName>XL Release</contextName>
-
-                  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-                      <!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-                      <encoder>
-                          <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] {%mdc} %-5level %logger{36} - %msg%n</pattern>
-                      </encoder>
-                  </appender>
-
-                  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-                      <file>log/xl-release.log</file>
-                      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-                          <fileNamePattern>log/xl-release.%i.log</fileNamePattern>
-                          <minIndex>1</minIndex>
-                          <maxIndex>5</maxIndex>
-                      </rollingPolicy>
-                      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-                          <maxFileSize>5MB</maxFileSize>
-                      </triggeringPolicy>
-                      <encoder>
-                          <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] {%mdc} %-5level %logger{36} - %msg%n</pattern>
-                      </encoder>
-                  </appender>
-
-                  <appender name="CLOUDWATCH" class="io.github.dibog.AwsLogAppender">
-                      <createLogGroup>false</createLogGroup>
-                      <queueLength>100</queueLength>
-                      <groupName>{{LogGroup}}</groupName>
-                      <streamName>XLRelease-${HOSTNAME:-default}</streamName>
-                      <layout>
-                          <pattern>[%X{a} %X{b}] %-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
-                      </layout>
-                  </appender>
-
-                  <root level="info">
-                      <appender-ref ref="STDOUT" />
-                      <appender-ref ref="FILE" />
-                      <appender-ref ref="CLOUDWATCH" />
-                  </root>
-
-                  <logger name="com.xebialabs" level="info" />
-                  <logger name="com.xebialabs.xlrelease.XLReleaseServer" level="trace" />
-                  <logger name="com.xebialabs.deployit.core.api.resteasy.http" level="info" />
-                  <logger name="com.xebialabs.deployit.jetty.HttpHeaderOverrideServletRequest" level="info" />
-                  <logger name="com.xebialabs.deployit.jetty.FlexRestCompatibilityServletRequest" level="info" />
-                  <logger name="com.xebialabs.overthere" level="info" />
-                  <logger name="com.xebialabs.overthere.spi.BaseOverthereConnection" level="warn" />
-                  <logger name="com.xebialabs.xlplatform.ui" level="warn" />
-                  <logger name="net.schmizz.sshj" level="error" />
-                  <logger name="org.springframework" level="warn"/>
-                  <logger name="com.zaxxer" level="warn"/>
-                  <logger name="org.apache.jackrabbit" level="warn" />
-                  <logger name="org.apache.jackrabbit.core.gc.GarbageCollector" level="debug" />
-                  <logger name="com.typesafe.akka.extension.quartz" level="warn" />
-                  <logger name="org.quartz" level="warn" />
-                  <logger name="org.terracotta.quartz" level="off" />
-                  <logger name="com.atomikos" level="warn" />
-                  <logger name="org.crsh" level="warn" />
-
-                  <!--  Audit logging -->
-
-                  <appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-                      <file>log/audit.log</file>
-                      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                          <FileNamePattern>log/audit.%d{yyyy-MM-dd}.log</FileNamePattern>
-                      </rollingPolicy>
-                      <encoder>
-                          <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%logger{36}] %msg%n</pattern>
-                      </encoder>
-                  </appender>
-
-                  <logger name="audit" level="info" additivity="false">
-                      <appender-ref ref="AUDIT" />
-                      <appender-ref ref="stash-audit"/>
-                  </logger>
-
-                  <!-- access log -->
-                  <appender name="ACCESS" class="ch.qos.logback.core.rolling.RollingFileAppender">
-                      <file>log/access.log</file>
-                      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                          <FileNamePattern>log/access.%d{yyyy-MM-dd}.zip</FileNamePattern>
-                          <maxHistory>90</maxHistory>
-                          <totalSizeCap>50MB</totalSizeCap>
-                      </rollingPolicy>
-                      <encoder>
-                          <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%logger{36}] %msg%n</pattern>
-                      </encoder>
-                  </appender>
-
-                  <logger name="com.xebialabs.deployit.plumbing.AccessLogFilter"  level="trace" additivity="false">
-                      <appender-ref ref="ACCESS" />
-                      <appender-ref ref="stash-access"/>
-                  </logger>
-                </configuration>
+                AWSProductCode:
+                  Ref: AWSProductCode
+                DBUser:
+                  Ref: DBUser
+                DBPassword:
+                  Ref: DBPassword
+                DBHost:
+                  Ref: DBHost
+                DBPort:
+                  Ref: DBPort
+                DBDriver:
+                  Ref: DBDriver
+                DBType:
+                  Fn::FindInMap:
+                    - DBType
+                    - Ref: DBDriver
+                    - Name
+                ReportingDBUser:
+                  Ref: ReportingDBUser
+                ReportingDBPassword:
+                  Ref: ReportingDBPassword
+                ReportingDBHost:
+                  Ref: ReportingDBHost
+                ReportingDBPort:
+                  Ref: ReportingDBPort
+                ReportingDBDriver:
+                  Ref: ReportingDBDriver
+                ReportingDBType:
+                  Fn::FindInMap:
+                    - ReportingDBType
+                    - Ref: ReportingDBDriver
+                    - Name
+            /opt/xlr/conf/logback.xml:
+              content: "<configuration>\n  <jmxConfigurator />\n  <contextName>XL\
+                \ Release</contextName>\n\n  <appender name=\"STDOUT\" class=\"ch.qos.logback.core.ConsoleAppender\"\
+                >\n      <!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder\
+                \ by default -->\n      <encoder>\n          <pattern>%d{yyyy-MM-dd\
+                \ HH:mm:ss.SSS} [%thread] {%mdc} %-5level %logger{36} - %msg%n</pattern>\n\
+                \      </encoder>\n  </appender>\n\n  <appender name=\"FILE\" class=\"\
+                ch.qos.logback.core.rolling.RollingFileAppender\">\n      <file>log/xl-release.log</file>\n\
+                \      <rollingPolicy class=\"ch.qos.logback.core.rolling.FixedWindowRollingPolicy\"\
+                >\n          <fileNamePattern>log/xl-release.%i.log</fileNamePattern>\n\
+                \          <minIndex>1</minIndex>\n          <maxIndex>5</maxIndex>\n\
+                \      </rollingPolicy>\n      <triggeringPolicy class=\"ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy\"\
+                >\n          <maxFileSize>5MB</maxFileSize>\n      </triggeringPolicy>\n\
+                \      <encoder>\n          <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread]\
+                \ {%mdc} %-5level %logger{36} - %msg%n</pattern>\n      </encoder>\n\
+                \  </appender>\n\n  <appender name=\"CLOUDWATCH\" class=\"io.github.dibog.AwsLogAppender\"\
+                >\n      <createLogGroup>true</createLogGroup>\n      <queueLength>100</queueLength>\n\
+                \      <groupName>{{LogGroup}}</groupName>\n      <streamName>XLRelease-${HOSTNAME:-default}</streamName>\n\
+                \      <layout>\n          <pattern>[%X{a} %X{b}] %-4relative [%thread]\
+                \ %-5level %logger{35} - %msg %n</pattern>\n      </layout>\n  </appender>\n\
+                \n  <root level=\"info\">\n      <appender-ref ref=\"STDOUT\" />\n\
+                \      <appender-ref ref=\"FILE\" />\n      <appender-ref ref=\"CLOUDWATCH\"\
+                \ />\n  </root>\n\n  <logger name=\"com.xebialabs\" level=\"info\"\
+                \ />\n  <logger name=\"com.xebialabs.xlrelease.XLReleaseServer\" level=\"\
+                trace\" />\n  <logger name=\"com.xebialabs.deployit.core.api.resteasy.http\"\
+                \ level=\"info\" />\n  <logger name=\"com.xebialabs.deployit.jetty.HttpHeaderOverrideServletRequest\"\
+                \ level=\"info\" />\n  <logger name=\"com.xebialabs.deployit.jetty.FlexRestCompatibilityServletRequest\"\
+                \ level=\"info\" />\n  <logger name=\"com.xebialabs.overthere\" level=\"\
+                info\" />\n  <logger name=\"com.xebialabs.overthere.spi.BaseOverthereConnection\"\
+                \ level=\"warn\" />\n  <logger name=\"com.xebialabs.xlplatform.ui\"\
+                \ level=\"warn\" />\n  <logger name=\"net.schmizz.sshj\" level=\"\
+                error\" />\n  <logger name=\"org.springframework\" level=\"warn\"\
+                />\n  <logger name=\"com.zaxxer\" level=\"warn\"/>\n  <logger name=\"\
+                org.apache.jackrabbit\" level=\"warn\" />\n  <logger name=\"org.apache.jackrabbit.core.gc.GarbageCollector\"\
+                \ level=\"debug\" />\n  <logger name=\"com.typesafe.akka.extension.quartz\"\
+                \ level=\"warn\" />\n  <logger name=\"org.quartz\" level=\"warn\"\
+                \ />\n  <logger name=\"org.terracotta.quartz\" level=\"off\" />\n\
+                \  <logger name=\"com.atomikos\" level=\"warn\" />\n  <logger name=\"\
+                org.crsh\" level=\"warn\" />\n\n  <!--  Audit logging -->\n\n  <appender\
+                \ name=\"AUDIT\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\"\
+                >\n      <file>log/audit.log</file>\n      <rollingPolicy class=\"\
+                ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n          <FileNamePattern>log/audit.%d{yyyy-MM-dd}.log</FileNamePattern>\n\
+                \      </rollingPolicy>\n      <encoder>\n          <pattern>%d{yyyy-MM-dd\
+                \ HH:mm:ss.SSS} [%logger{36}] %msg%n</pattern>\n      </encoder>\n\
+                \  </appender>\n\n  <logger name=\"audit\" level=\"info\" additivity=\"\
+                false\">\n      <appender-ref ref=\"AUDIT\" />\n      <appender-ref\
+                \ ref=\"stash-audit\"/>\n  </logger>\n\n  <!-- access log -->\n  <appender\
+                \ name=\"ACCESS\" class=\"ch.qos.logback.core.rolling.RollingFileAppender\"\
+                >\n      <file>log/access.log</file>\n      <rollingPolicy class=\"\
+                ch.qos.logback.core.rolling.TimeBasedRollingPolicy\">\n          <FileNamePattern>log/access.%d{yyyy-MM-dd}.zip</FileNamePattern>\n\
+                \          <maxHistory>90</maxHistory>\n          <totalSizeCap>50MB</totalSizeCap>\n\
+                \      </rollingPolicy>\n      <encoder>\n          <pattern>%d{yyyy-MM-dd\
+                \ HH:mm:ss.SSS} [%logger{36}] %msg%n</pattern>\n      </encoder>\n\
+                \  </appender>\n\n  <logger name=\"com.xebialabs.deployit.plumbing.AccessLogFilter\"\
+                \  level=\"trace\" additivity=\"false\">\n      <appender-ref ref=\"\
+                ACCESS\" />\n      <appender-ref ref=\"stash-access\"/>\n  </logger>\n\
+                </configuration>\n"
               owner: xl
               group: xl
               context:
-                LogGroup: !Ref xlrLogGroup
+                LogGroup:
+                  Ref: LogGroup
           commands:
             00_remove_xld:
               command: rm -Rf /opt/xld /etc/systemd/system/xld.service
             01_configure_wrapper_memory:
-              command: export MEMORY=`free -m | head -n 2 | tail -n 1 | awk '{print $7}'`; sed -i "s/\[\[ MEM_SIZE \]\]/$MEMORY/" /opt/xlr/conf/xlr-wrapper-linux.conf
+              command: export MEMORY=`free -m | head -n 2 | tail -n 1 | awk '{print
+                $7}'`; sed -i "s/\[\[ MEM_SIZE \]\]/$MEMORY/" /opt/xlr/conf/xlr-wrapper-linux.conf
             02_configure_efs_mount:
-              command: |
-                mkdir -p $EFS_MOUNT_POINT
-                echo "$EFS_ID:/ $EFS_MOUNT_POINT efs tls,_netdev" >> /etc/fstab
-                mount -a -t efs defaults
-
-                chown -R xl:xl $EFS_MOUNT_POINT
+              command: "mkdir -p $EFS_MOUNT_POINT\necho \"$EFS_ID:/ $EFS_MOUNT_POINT\
+                \ efs tls,_netdev\" >> /etc/fstab\nmount -a -t efs defaults\n\nchown\
+                \ -R xl:xl $EFS_MOUNT_POINT\n"
               env:
-                EFS_ID: !Ref EfsId
+                EFS_ID:
+                  Ref: EfsId
                 EFS_MOUNT_POINT: /opt/xlr/reports
             03_get_ip_for_cluster:
-              command: |
-                export IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4); sed -i "s/HOSTNAME/$IP/g" $XL_CONFIG_FILE
+              command: "export IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4);\
+                \ sed -i \"s/HOSTNAME/$IP/g\" $XL_CONFIG_FILE\n"
               env:
                 XL_CONFIG_FILE: /opt/xlr/conf/xl-release.conf
             04_xlr_startup:
-              command: |
-                DEFERRED_SSM_PARAM=${AWS_STACK_NAME}-xlr_deferred_startup
-                if aws ssm put-parameter --name "$DEFERRED_SSM_PARAM" --value "true" --no-overwrite --type String --region $AWS_REGION ; then
-                  echo "XL Release deferred startup parameter was not found. XL Release will start immediately"
-                  systemctl enable xlr
-                  systemctl start xlr
-                else
-                  echo "XL Release deferred startup parameter was found. Wait until DB schema is created ..."
-                  sleep 30s
-                  systemctl enable xlr
-                  systemctl start xlr
-                  aws ssm delete-parameter --name "$DEFERRED_SSM_PARAM" --region $AWS_REGION
-                fi
+              command: "DEFERRED_SSM_PARAM=${AWS_STACK_NAME}-xlr_deferred_startup\n\
+                if aws ssm put-parameter --name \"$DEFERRED_SSM_PARAM\" --value \"\
+                true\" --no-overwrite --type String --region $AWS_REGION ; then\n\
+                \  echo \"XL Release deferred startup parameter was not found. XL\
+                \ Release will start immediately\"\n  systemctl enable xlr\n  systemctl\
+                \ start xlr\nelse\n  echo \"XL Release deferred startup parameter\
+                \ was found. Wait until DB schema is created ...\"\n  sleep 30s\n\
+                \  systemctl enable xlr\n  systemctl start xlr\n  aws ssm delete-parameter\
+                \ --name \"$DEFERRED_SSM_PARAM\" --region $AWS_REGION\nfi\n"
               env:
-                AWS_REGION: !Sub ${AWS::Region}
-                AWS_STACK_NAME: !Sub ${AWS::StackName}
+                AWS_REGION:
+                  Fn::Sub: ${AWS::Region}
+                AWS_STACK_NAME:
+                  Fn::Sub: ${AWS::StackName}
         health_checks:
           commands:
             01_await_healthy_service:
-              command: |
-                i=0
-                EXIT_CODE=1
-                # Let's retry for three minutes (18 times, every 10 seconds)
-                while [ $i -lt 18 ]
-                do
-                  echo "Checking for healthy service (currently on attempt $i)..."
-                  RESULT=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$APPLICATION_PORT/")
-
-                  if [[ "$RESULT" -lt 500 && "$RESULT" -ge 200 ]]; then
-                    echo "Status code is $RESULT - will signal success to stack"
-                    EXIT_CODE=0
-                    break
-                  else
-                    ((i++))
-                    echo "Current status code: $RESULT - retrying..."
-                    sleep 10
-                  fi
-                done
-
-                if [[ "$EXIT_CODE" -eq 1 ]]; then
-                  echo "Startup failed - signalling failure to stack"
-                fi
-
-                /opt/aws/bin/cfn-signal --exit-code $EXIT_CODE --stack $STACK_NAME --resource XLReleaseGroup --region $REGION
+              command: "i=0\nEXIT_CODE=1\n# Let's retry for three minutes (18 times,\
+                \ every 10 seconds)\nwhile [ $i -lt 18 ]\ndo\n  echo \"Checking for\
+                \ healthy service (currently on attempt $i)...\"\n  RESULT=$(curl\
+                \ -s -o /dev/null -w \"%{http_code}\" \"http://localhost:$APPLICATION_PORT/\"\
+                )\n\n  if [[ \"$RESULT\" -lt 500 && \"$RESULT\" -ge 200 ]]; then\n\
+                \    echo \"Status code is $RESULT - will signal success to stack\"\
+                \n    EXIT_CODE=0\n    break\n  else\n    ((i++))\n    echo \"Current\
+                \ status code: $RESULT - retrying...\"\n    sleep 30\n  fi\ndone\n\
+                \nif [[ \"$EXIT_CODE\" -eq 1 ]]; then\n  echo \"Startup failed - signalling\
+                \ failure to stack\"\nfi\n\n/opt/aws/bin/cfn-signal --exit-code $EXIT_CODE\
+                \ --stack $STACK_NAME --resource XLReleaseGroup --region $REGION\n"
               env:
-                APPLICATION_PORT: !Ref 'XLReleasePort'
-                STACK_NAME: !Sub ${AWS::StackName}
-                REGION: !Sub ${AWS::Region}
+                APPLICATION_PORT:
+                  Ref: XLReleasePort
+                STACK_NAME:
+                  Fn::Sub: ${AWS::StackName}
+                REGION:
+                  Fn::Sub: ${AWS::Region}
         jmxtrans:
           commands:
             01_set_asg_name:
               command: sed -i "s/{{ ASG_NAME }}/$ASG_NAME/g" /var/lib/jmxtrans/jmxtrans-cloudwatch.json
               env:
-                ASG_NAME: !Ref ASGInstanceName
+                ASG_NAME:
+                  Ref: ASGInstanceName
             02_start_jmxtrans:
               command: sudo systemctl start jmxtrans
         configSets:
           configuration:
-            - 'template'
-            - 'health_checks'
-            - 'jmxtrans'
+            - template
+            - health_checks
+            - jmxtrans
     Properties:
-      KeyName: !Ref 'KeyPairName'
-      ImageId: !Ref 'AMIID'
-      SecurityGroups: [!Ref 'SecurityGroup']
-      InstanceType: !Ref 'XLReleaseInstanceType'
-      IamInstanceProfile: !Ref 'XLRInstanceProfile'
+      KeyName:
+        Ref: KeyPairName
+      ImageId:
+        Ref: AMIID
+      SecurityGroups:
+        - Ref: SecurityGroup
+      InstanceType:
+        Ref: XLReleaseInstanceType
+      IamInstanceProfile:
+        Ref: XLRInstanceProfile
       UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash -xe
-          yum update -y aws-cfn-bootstrap
-
-          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region} --configsets configuration
-  xlrLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties: 
-      LogGroupName: !Ref LogGroupName
+        Fn::Base64:
+          Fn::Sub: "#!/bin/bash -xe\nyum update -y aws-cfn-bootstrap\n\n/opt/aws/bin/cfn-init\
+            \ -v --stack ${AWS::StackName} --resource LaunchConfig --region ${AWS::Region}\
+            \ --configsets configuration\n"
   XLReleaseRole:
     Type: AWS::IAM::Role
     Properties:
@@ -446,31 +373,30 @@ Resources:
             Principal:
               Service:
                 - ec2.amazonaws.com
-            Action:
-              sts:AssumeRole
+            Action: sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: 'xlr-policy'
+        - PolicyName: xlr-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: "logs:*"
-                Resource: !Sub 'arn:aws:logs:${AWS::Region}:*:log-group:${xlrLogGroup}:*'
+                Action: logs:*
+                Resource: arn:aws:logs:*:*:*
               - Effect: Allow
-                Action: "ssm:*"
-                Resource: "arn:aws:ssm:*:*:*"
+                Action: ssm:*
+                Resource: arn:aws:ssm:*:*:*
               - Effect: Allow
-                Action: "cloudwatch:*"
-                Resource: "*"
+                Action: cloudwatch:*
+                Resource: '*'
   XLRInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
-        - !Ref "XLReleaseRole"
-
+        - Ref: XLReleaseRole
 Outputs:
   XLRASGName:
     Description: The name of the XL Release Auto-scaling Group
-    Value: !Ref XLReleaseGroup
+    Value:
+      Ref: XLReleaseGroup

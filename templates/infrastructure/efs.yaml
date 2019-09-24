@@ -1,6 +1,5 @@
-Description: >
-  This template deploys an EFS file system that can be used from ASGs services for persistent data.
-
+Description: "This template deploys an EFS file system that can be used from ASGs\
+  \ services for persistent data.\n"
 Parameters:
   EnvironmentName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
@@ -24,50 +23,57 @@ Parameters:
     Type: AWS::EC2::SecurityGroup::Id
   XLReleaseASGSecurityGroup:
     Description: The security group to attach to the XL Release ASG instances
-    Type: AWS::EC2::SecurityGroup::Id    
+    Type: AWS::EC2::SecurityGroup::Id
   PrivateSubnetIDs:
     Description: The private subnets this EFS can be mount
     Type: List<AWS::EC2::Subnet::Id>
-
 Resources:
-
   MountTargetSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      VpcId: !Ref VPCID
+      VpcId:
+        Ref: VPCID
       GroupDescription: Security group for mount target
       SecurityGroupIngress:
-      - SourceSecurityGroupId: !Ref XLDeployASGSecurityGroup
-        IpProtocol: '-1'
-      - SourceSecurityGroupId: !Ref XLReleaseASGSecurityGroup
-        IpProtocol: '-1'
+        - SourceSecurityGroupId:
+            Ref: XLDeployASGSecurityGroup
+          IpProtocol: '-1'
+        - SourceSecurityGroupId:
+            Ref: XLReleaseASGSecurityGroup
+          IpProtocol: '-1'
       Tags:
-      - Key: Name
-        Value: !Sub ${EnvironmentName}-EFS-Hosts
+        - Key: Name
+          Value:
+            Fn::Sub: ${EnvironmentName}-EFS-Hosts
   FileSystemXLD:
     Type: AWS::EFS::FileSystem
     Properties:
       FileSystemTags:
-      - Key: Name
-        Value:
-          Ref: EFSNameTagXLD
+        - Key: Name
+          Value:
+            Ref: EFSNameTagXLD
   MountTargetXLD1:
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId:
         Ref: FileSystemXLD
-      SubnetId: !Select [ 0, !Ref PrivateSubnetIDs ]
+      SubnetId:
+        Fn::Select:
+          - '0'
+          - Ref: PrivateSubnetIDs
       SecurityGroups:
-      - Ref: MountTargetSecurityGroup
+        - Ref: MountTargetSecurityGroup
   MountTargetXLD2:
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId:
         Ref: FileSystemXLD
-      SubnetId: !Select [ 1, !Ref PrivateSubnetIDs ]
+      SubnetId:
+        Fn::Select:
+          - '1'
+          - Ref: PrivateSubnetIDs
       SecurityGroups:
-      - Ref: MountTargetSecurityGroup
-
+        - Ref: MountTargetSecurityGroup
   FileSystemXLR:
     Type: AWS::EFS::FileSystem
     Properties:
@@ -80,7 +86,10 @@ Resources:
     Properties:
       FileSystemId:
         Ref: FileSystemXLR
-      SubnetId: !Select [ 0, !Ref PrivateSubnetIDs ]
+      SubnetId:
+        Fn::Select:
+          - '0'
+          - Ref: PrivateSubnetIDs
       SecurityGroups:
         - Ref: MountTargetSecurityGroup
   MountTargetXLR2:
@@ -88,16 +97,18 @@ Resources:
     Properties:
       FileSystemId:
         Ref: FileSystemXLR
-      SubnetId: !Select [ 1, !Ref PrivateSubnetIDs ]
+      SubnetId:
+        Fn::Select:
+          - '1'
+          - Ref: PrivateSubnetIDs
       SecurityGroups:
         - Ref: MountTargetSecurityGroup
-
 Outputs:
   FilesystemXLD:
     Description: A reference to the EFS FileSystem for XL Deploy
-    Value: !Ref FileSystemXLD
-
+    Value:
+      Ref: FileSystemXLD
   FilesystemXLR:
     Description: A reference to the EFS FileSystem for XL Release
-    Value: !Ref FileSystemXLR
-
+    Value:
+      Ref: FileSystemXLR
