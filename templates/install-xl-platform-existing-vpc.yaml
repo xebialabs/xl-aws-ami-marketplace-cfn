@@ -180,7 +180,7 @@ Parameters:
 Mappings:
   AWSRegionAMI:
     us-east-1:
-      AMIID: ami-073cdf5177cbfa965
+      AMIID: ami-0dbaeadf3f73e1450
     us-east-2:
       AMIID: ami-0800eab6d027a79a1
     us-west-1:
