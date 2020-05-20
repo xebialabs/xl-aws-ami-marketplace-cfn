@@ -1,7 +1,8 @@
 import json
 import time
 import logging
-from botocore.vendored import requests
+#from botocore.vendored import requests
+import requests
 import boto3
 from copy import deepcopy
 from hashlib import md5
