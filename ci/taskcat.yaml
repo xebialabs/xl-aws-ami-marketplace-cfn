@@ -1,13 +1,15 @@
-global:
+project:
+  name: ami-xebialabs-devops-platform
   owner: xl-aws-ami@xebialabs.com
-  qsname: ami-xebialabs-devops-platform
-
-  # N.B.: If you run the tests in a different region than us-east-1,
-  # add an override for CertificateArn in ~/.aws/taskcat_global_override.json
   regions:
     - us-east-1
-  reporting: true
 tests:
-  new-vpc-e2e:
-    parameter_input: new-vpc-e2e.json
-    template_file: install-xl-platform.yaml
+  ami-xebialabs-devops-platform1:
+    parameters:
+      BucketName: $[taskcat_autobucket]
+      CertificateArn: "arn:aws:acm:us-east-1:347067721769:certificate/34cdd446-1579-4277-9812-dbd33a75b8bf"
+      KeyPairName: ami-ci
+      DBMasterPassword: agld123456
+      XLDeployPassword: agld123456
+      XLReleasePassword: agld123456
+    template: templates/install-xl-platform.yaml
