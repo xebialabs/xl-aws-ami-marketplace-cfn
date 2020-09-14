@@ -1,0 +1,18 @@
+project:
+  name: ami-xebialabs-devops-platform
+  owner: xl-aws-ami@xebialabs.com
+  package_lambda: false
+  regions:
+    - us-east-1
+tests:
+  ami-xebialabs-devops-platform:
+    parameters:
+      BucketKeyPrefix: ami-xebialabs-devops-platform/
+      BucketName: "$[taskcat_autobucket]"
+      CIDRBlockVpc: 10.0.0.0/19
+      CertificateArn: "arn:aws:acm:us-east-1:932770550094:certificate/7b814bab-2f10-4940-9cad-ee8f38422a0c"
+      DBMasterPassword: test12345
+      KeyPairName: xl-keypair-n-virginia
+      XLDeployPassword: test12345
+      XLReleasePassword: test12345
+    template: templates/install-xl-platform.yaml
