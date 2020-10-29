@@ -83,6 +83,9 @@ Metadata:
         default: S3 key prefix
 Parameters:
   CertificateArn:
+    MinLength: 20
+    MaxLength: 2048
+    AllowedPattern: 'arn:[\w+=/,.@-]+:[\w+=/,.@-]+:[\w+=/,.@-]*:[0-9]*:[\w+=,.@-]+(/[\w+=,.@-]+)*'
     Description: Which ACM certificate to use for the load balancer
     Type: String
   VPCID:
